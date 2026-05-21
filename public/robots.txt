@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /antariksha-control-panel
+Disallow: /antariksha-control-panel/
+Disallow: /control-room
+Disallow: /control-room/
+
+Sitemap: /sitemap.xml

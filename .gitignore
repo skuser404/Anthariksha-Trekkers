@@ -1,0 +1,17 @@
+node_modules
+dist
+dist-ssr
+.env
+.env.local
+.env.production
+.env.*.local
+.DS_Store
+*.log
+.vscode/*
+!.vscode/extensions.json
+
+# Raw source media (kept locally only — selected assets are copied into public/images)
+IMAGES/
+
+# Build artifacts
+*.tsbuildinfo
