@@ -172,7 +172,7 @@ export default function Testimonials() {
       </div>
 
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10 mt-10 text-sm text-muted">
-        Verified bookings · Sourced from our trek WhatsApp groups and Thrillophilia-style review summaries.
+        Verified bookings · Reviews collected from our weekend trek WhatsApp groups.
       </div>
     </section>
   );

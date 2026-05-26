@@ -1,82 +1,132 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const tags = [
-  'Kudremukh Expedition',
-  'Kumara Parvatha Challenge',
-  'Netravati Escape',
-  'Bandaje Falls Adventure',
-  'Kurinjal Peak Trek',
-  'Kodachadri Journey',
-  'Skandagiri Sunrise',
-  'Tadiandamol Expedition'
+const ROTATION_MS = 6000;
+const POSTER_SRC = '/images/waterfall.jpg';
+
+const TREKS = [
+  { name: 'Kudremukh Trek',          video: '/Kudremukh Trek.mp4'        },
+  { name: 'Kumara Parvatha Trek',    video: '/Kumara Parvatha Trek.mp4'  },
+  { name: 'Netravati Peak Trek',     video: '/Netravati Peak Trek.mp4'   },
+  { name: 'Bandaje Falls Trek',      video: '/Bandaje Falls Trek.mp4'    },
+  { name: 'Kurinjal Peak Trek',      video: '/Kurinjal Peak Trek.mp4'    },
+  { name: 'Kodachadri Trek',         video: '/Kodachadri Trek.mp4'       },
+  { name: 'Skandagiri Sunrise Trek', video: '/Skandagiri Sunrise TreK.mp4' },
+  { name: 'Tadiandamol Trek',        video: '/Tadiandamol Trek.mp4'      }
 ];
 
-const VIDEO_SRC = '/tags-background.mp4';
-const POSTER_SRC = '/images/hero-sunrise.jpg';
+// On low-power / mobile devices, prefer poster only to avoid jank.
+function shouldShowVideo() {
+  if (typeof window === 'undefined') return false;
+  const conn = navigator.connection;
+  if (conn?.saveData) return false;
+  if (conn?.effectiveType && /^(slow-2g|2g|3g)$/.test(conn.effectiveType)) return false;
+  // Reduce motion preference
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return false;
+  return true;
+}
 
 export default function RotatingTags() {
   const [i, setI] = useState(0);
-  const [videoOk, setVideoOk] = useState(true);
-  const videoRef = useRef(null);
+  const [activeSlot, setActiveSlot] = useState(0); // 0 = A visible, 1 = B visible
+  const [videoEnabled] = useState(shouldShowVideo);
+  const refA = useRef(null);
+  const refB = useRef(null);
 
+  // Advance every ROTATION_MS — title + active slot together
   useEffect(() => {
-    const id = setInterval(() => setI((v) => (v + 1) % tags.length), 2800);
+    if (!videoEnabled) {
+      // Even with video disabled, still rotate the title every interval
+      const id = setInterval(() => setI((v) => (v + 1) % TREKS.length), ROTATION_MS);
+      return () => clearInterval(id);
+    }
+    const id = setInterval(() => {
+      setI((v) => (v + 1) % TREKS.length);
+      setActiveSlot((s) => (s === 0 ? 1 : 0));
+    }, ROTATION_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [videoEnabled]);
 
-  // If the browser can't play this codec (e.g. HEVC on Chrome/Win), fall back to poster
+  // Preload the NEXT clip into the now-hidden slot — but DEFER until the
+  // crossfade is fully complete, otherwise the half-faded element flashes
+  // its loading frame in the middle of the screen.
   useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    const onError = () => setVideoOk(false);
-    const checkPlayable = () => {
-      // readyState 0 + no progress means decode failed silently
-      window.setTimeout(() => {
-        if (v && v.readyState === 0 && !v.error) {
-          // Still nothing after 2s — likely an unplayable codec
-          setVideoOk(false);
-        }
-      }, 2200);
-    };
-    v.addEventListener('error', onError);
-    v.addEventListener('loadstart', checkPlayable);
-    return () => {
-      v.removeEventListener('error', onError);
-      v.removeEventListener('loadstart', checkPlayable);
-    };
-  }, []);
+    if (!videoEnabled) return;
+    const hiddenRef = activeSlot === 0 ? refB : refA;
+    const nextIdx = (i + 1) % TREKS.length;
+    const nextSrc = TREKS[nextIdx].video;
+
+    const timer = setTimeout(() => {
+      const v = hiddenRef.current;
+      if (!v || v.dataset.src === nextSrc) return;
+      v.dataset.src = nextSrc;
+      v.src = nextSrc;
+      v.load();
+      v.play?.().catch(() => {});
+    }, 1500); // > 1200ms crossfade — slot is fully invisible by then
+
+    return () => clearTimeout(timer);
+  }, [i, activeSlot, videoEnabled]);
+
+  // Initial load — put current into slot A, next into slot B
+  useEffect(() => {
+    if (!videoEnabled) return;
+    if (refA.current && !refA.current.dataset.src) {
+      refA.current.dataset.src = TREKS[0].video;
+      refA.current.src = TREKS[0].video;
+      refA.current.play?.().catch(() => {});
+    }
+    if (refB.current && !refB.current.dataset.src) {
+      refB.current.dataset.src = TREKS[1].video;
+      refB.current.src = TREKS[1].video;
+      refB.current.play?.().catch(() => {});
+    }
+  }, [videoEnabled]);
 
   return (
     <section
       className="relative bg-base text-cream py-24 lg:py-36 overflow-hidden border-y border-cream/5"
       aria-label="Featured expeditions"
     >
-      {videoOk ? (
-        <video
-          ref={videoRef}
-          className="absolute inset-0 w-full h-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          poster={POSTER_SRC}
-          aria-hidden
-        >
-          <source src={VIDEO_SRC} type="video/mp4" />
-        </video>
-      ) : (
-        <img
-          src={POSTER_SRC}
-          alt=""
-          aria-hidden
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+      {/* Poster fallback — always under the videos, fills any loading gap */}
+      <img
+        src={POSTER_SRC}
+        alt=""
+        aria-hidden
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+
+      {videoEnabled && (
+        <>
+          <video
+            ref={refA}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-out will-change-[opacity] ${
+              activeSlot === 0 ? 'opacity-100 z-[2]' : 'opacity-0 z-[1] pointer-events-none'
+            }`}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-hidden
+          />
+          <video
+            ref={refB}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-out will-change-[opacity] ${
+              activeSlot === 1 ? 'opacity-100 z-[2]' : 'opacity-0 z-[1] pointer-events-none'
+            }`}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-hidden
+          />
+        </>
       )}
 
-      <div className="absolute inset-0 bg-base/55" aria-hidden />
-      <div className="absolute inset-0 bg-gradient-to-b from-base/85 via-base/20 to-base/85" aria-hidden />
+      <div className="absolute inset-0 bg-base/35" aria-hidden />
+      <div className="absolute inset-0 bg-gradient-to-b from-base/70 via-transparent to-base/80" aria-hidden />
 
       <div className="absolute inset-0 pointer-events-none opacity-70" aria-hidden>
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[420px] w-[820px] rounded-full bg-ember/25 blur-[160px]" />
@@ -96,7 +146,7 @@ export default function RotatingTags() {
         <div className="mt-6 lg:mt-10 h-[18vw] sm:h-[120px] lg:h-[180px] grid place-items-center relative">
           <AnimatePresence mode="wait">
             <motion.h2
-              key={tags[i]}
+              key={TREKS[i].name}
               initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
               animate={{
                 opacity: 1,
@@ -117,18 +167,21 @@ export default function RotatingTags() {
               }}
               className="serif text-[10vw] sm:text-6xl lg:text-7xl xl:text-[6.5rem] font-medium tracking-tight leading-none drop-shadow-[0_6px_30px_rgba(0,0,0,0.45)]"
             >
-              <em className="italic font-normal text-ember">{tags[i].split(' ')[0]}</em>
-              <span className="text-cream"> {tags[i].split(' ').slice(1).join(' ')}</span>
+              <em className="italic font-normal text-ember">{TREKS[i].name.split(' ')[0]}</em>
+              <span className="text-cream"> {TREKS[i].name.split(' ').slice(1).join(' ')}</span>
             </motion.h2>
           </AnimatePresence>
         </div>
 
         <div className="mt-12 flex flex-wrap justify-center gap-2 lg:gap-3">
-          {tags.map((t, idx) => (
+          {TREKS.map((t, idx) => (
             <button
-              key={t}
-              onClick={() => setI(idx)}
-              aria-label={`Show ${t}`}
+              key={t.name}
+              onClick={() => {
+                setI(idx);
+                setActiveSlot((s) => (s === 0 ? 1 : 0));
+              }}
+              aria-label={`Show ${t.name}`}
               className={`h-1.5 rounded-full transition-all duration-500 ${
                 idx === i ? 'w-12 bg-ember' : 'w-3 bg-cream/25 hover:bg-cream/50'
               }`}

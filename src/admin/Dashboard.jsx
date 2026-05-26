@@ -1,425 +1,241 @@
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Calendar, Image as ImageIcon, Share2, Tag, Megaphone, FileText,
+  Camera, ChevronLeft, LogOut, ClipboardList, Activity, ShieldAlert
+} from 'lucide-react';
 import { supabase } from '../lib/supabase.js';
-import { formatINR } from '../lib/treks.js';
+import { ToastHost } from './editors/_shared.jsx';
+
+import PriceEditor from './editors/PriceEditor.jsx';
+import ItineraryEditor from './editors/ItineraryEditor.jsx';
+import ImageManager from './editors/ImageManager.jsx';
+import GalleryManager from './editors/GalleryManager.jsx';
+import SocialLinksEditor from './editors/SocialLinksEditor.jsx';
+import AnnouncementManager from './editors/AnnouncementManager.jsx';
+import TermsEditor from './editors/TermsEditor.jsx';
+import TrekGuidelinesEditor from './editors/TrekGuidelinesEditor.jsx';
+import BookingsView from './editors/BookingsView.jsx';
+
+const CARDS = [
+  { id: 'itinerary',     icon: Calendar,      title: 'Itinerary Editor',        desc: 'Edit day-by-day plans + highlights per trek.',          accent: 'from-ember/30 to-ember/5' },
+  { id: 'images',        icon: ImageIcon,     title: 'Trek Image Manager',      desc: 'Swap card / hero photos via Google Drive links.',       accent: 'from-amber-400/30 to-amber-400/5' },
+  { id: 'social',        icon: Share2,        title: 'Social Media Links',      desc: 'Instagram · WhatsApp · phone · Google Business.',       accent: 'from-sky-400/30 to-sky-400/5' },
+  { id: 'prices',        icon: Tag,           title: 'Trip Price Editor',       desc: 'Update per-trek pricing + open/closed status.',         accent: 'from-emerald-400/30 to-emerald-400/5' },
+  { id: 'announcements', icon: Megaphone,     title: 'Announcements',           desc: 'Banner messages + monsoon notices + offers.',           accent: 'from-rose-400/30 to-rose-400/5' },
+  { id: 'terms',         icon: FileText,      title: 'Terms & Conditions',      desc: 'Policies · Privacy · Cancellation · Safety.',           accent: 'from-indigo-400/30 to-indigo-400/5' },
+  { id: 'gallery',       icon: Camera,        title: 'Gallery Manager',         desc: 'Reorder, add, or hide gallery photos (Drive links).',   accent: 'from-fuchsia-400/30 to-fuchsia-400/5' },
+  { id: 'guidelines',    icon: ShieldAlert,   title: 'Trek Guidelines',         desc: "Global Do's, Don'ts, and the mandatory lunchbox rule.", accent: 'from-emerald-400/30 to-emerald-400/5' },
+  { id: 'bookings',      icon: ClipboardList, title: 'Recent Bookings',         desc: 'Latest 50 enquiries from WhatsApp & form submits.',     accent: 'from-violet-400/30 to-violet-400/5' }
+];
+
+const VIEWS = {
+  itinerary:     ItineraryEditor,
+  images:        ImageManager,
+  social:        SocialLinksEditor,
+  prices:        PriceEditor,
+  announcements: AnnouncementManager,
+  terms:         TermsEditor,
+  gallery:       GalleryManager,
+  guidelines:    TrekGuidelinesEditor,
+  bookings:      BookingsView
+};
 
 export default function AdminDashboard({ user }) {
-  const [treks, setTreks] = useState([]);
-  const [batches, setBatches] = useState([]);
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editingTrek, setEditingTrek] = useState(null);
-  const [trekDraft, setTrekDraft] = useState({});
-  const [editingBatch, setEditingBatch] = useState(null);
-  const [batchDraft, setBatchDraft] = useState(emptyBatchDraft());
-  const [saving, setSaving] = useState(false);
+  const [section, setSection] = useState(null);
+  const active = section ? CARDS.find((c) => c.id === section) : null;
+  const ActiveView = section ? VIEWS[section] : null;
 
-  function emptyBatchDraft() {
-    return { trek_id: '', start_date: '', end_date: '', price: '', is_active: true, date_label: '' };
-  }
-
-  async function load() {
-    setLoading(true);
-    const [{ data: trekRows }, { data: batchRows }, { data: bookingRows }] = await Promise.all([
-      supabase.from('treks').select('*').order('display_order', { ascending: true }),
-      supabase.from('batches').select('*').order('start_date', { ascending: true }),
-      supabase.from('bookings').select('*').order('created_at', { ascending: false }).limit(50)
-    ]);
-    setTreks(trekRows || []);
-    setBatches(batchRows || []);
-    setBookings(bookingRows || []);
-    setLoading(false);
-  }
-
-  useEffect(() => { load(); }, []);
-
-  function startTrekEdit(t) {
-    setEditingTrek(t.id);
-    setTrekDraft({
-      price: t.price,
-      is_active: t.is_active,
-      is_open: t.is_open !== false,
-      tag: t.tag || ''
-    });
-  }
-
-  async function saveTrekEdit() {
-    if (!editingTrek) return;
-    setSaving(true);
-    const { error } = await supabase
-      .from('treks')
-      .update({
-        price: Number(trekDraft.price) || null,
-        is_active: !!trekDraft.is_active,
-        is_open: !!trekDraft.is_open,
-        tag: trekDraft.tag
-      })
-      .eq('id', editingTrek);
-    setSaving(false);
-    if (error) return alert(error.message);
-    setEditingTrek(null);
-    await load();
-  }
-
-  async function quickToggleOpen(t) {
-    const nextOpen = !(t.is_open !== false);
-    const { error } = await supabase
-      .from('treks')
-      .update({ is_open: nextOpen })
-      .eq('id', t.id);
-    if (error) return alert(error.message);
-    await load();
-  }
-
-  function startBatchEdit(b) {
-    setEditingBatch(b.id);
-    setBatchDraft({
-      trek_id: b.trek_id,
-      start_date: b.start_date || '',
-      end_date: b.end_date || '',
-      price: b.price ?? '',
-      is_active: b.is_active,
-      date_label: b.date_label || ''
-    });
-  }
-
-  function startNewBatch() {
-    setEditingBatch('new');
-    setBatchDraft(emptyBatchDraft());
-  }
-
-  async function saveBatch() {
-    setSaving(true);
-    const payload = {
-      trek_id: batchDraft.trek_id,
-      start_date: batchDraft.start_date,
-      end_date: batchDraft.end_date || null,
-      price: batchDraft.price === '' ? null : Number(batchDraft.price),
-      is_active: !!batchDraft.is_active,
-      date_label: batchDraft.date_label || null
-    };
-
-    if (!payload.trek_id || !payload.start_date) {
-      setSaving(false);
-      return alert('Trek and start date are required.');
-    }
-
-    let error;
-    if (editingBatch === 'new') {
-      ({ error } = await supabase.from('batches').insert(payload));
-    } else {
-      ({ error } = await supabase.from('batches').update(payload).eq('id', editingBatch));
-    }
-    setSaving(false);
-    if (error) return alert(error.message);
-    setEditingBatch(null);
-    setBatchDraft(emptyBatchDraft());
-    await load();
-  }
-
-  async function deleteBatch(id) {
-    if (!confirm('Delete this batch?')) return;
-    const { error } = await supabase.from('batches').delete().eq('id', id);
-    if (error) return alert(error.message);
-    await load();
-  }
-
-  async function signOut() {
-    await supabase.auth.signOut();
-  }
+  // Reset scroll on section change
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [section]);
 
   return (
-    <div className="min-h-screen bg-cream text-ink">
-      <header className="sticky top-0 z-20 bg-cream/90 backdrop-blur border-b border-ink/10">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-ink text-cream grid place-items-center text-xs font-bold">A</div>
-            <div>
-              <div className="eyebrow text-muted">Control Panel</div>
-              <div className="text-sm font-medium">{user.email}</div>
+    <div className="min-h-screen bg-base text-cream">
+      <ToastHost />
+      <header className="sticky top-0 z-30 bg-base/85 backdrop-blur-xl border-b border-cream/10">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            {section ? (
+              <button
+                onClick={() => setSection(null)}
+                className="h-9 w-9 rounded-full bg-cream/10 hover:bg-ember hover:text-cream grid place-items-center transition-colors flex-shrink-0"
+                aria-label="Back to dashboard"
+              >
+                <ChevronLeft size={18} />
+              </button>
+            ) : (
+              <img src="/images/logo.png" alt="Anthariksha" className="h-9 w-9 rounded-full ring-1 ring-cream/15" />
+            )}
+            <div className="min-w-0">
+              <div className="eyebrow text-ember">Control Panel</div>
+              <div className="serif text-base lg:text-lg truncate">
+                {active ? active.title : 'Anthariksha Trekkers'}
+              </div>
             </div>
           </div>
-          <button onClick={signOut} className="text-sm link-underline">Sign out</button>
+          <div className="flex items-center gap-4 flex-shrink-0">
+            <div className="hidden sm:block text-xs text-cream/50">{user.email}</div>
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border border-cream/15 hover:border-ember hover:text-ember transition-colors"
+              title="Sign out"
+            >
+              <LogOut size={13} />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 lg:px-10 py-10 space-y-14">
+      <main className="max-w-7xl mx-auto px-6 lg:px-10 py-10 lg:py-14">
+        <AnimatePresence mode="wait">
+          {!section && (
+            <motion.div
+              key="grid"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.4, ease: [0.7, 0, 0.2, 1] }}
+            >
+              <div className="mb-10 lg:mb-14">
+                <h1 className="serif text-4xl lg:text-5xl tracking-tight font-medium">
+                  Welcome back, <em className="italic text-ember">{(user.email || 'admin').split('@')[0]}</em>.
+                </h1>
+                <p className="mt-4 text-cream/55 text-sm max-w-xl">
+                  Everything you change here goes live on the site in real time. No deploys needed.
+                </p>
+              </div>
 
-        {/* ============ BATCHES ============ */}
-        <section>
-          <div className="flex items-baseline justify-between mb-6">
-            <div>
-              <h2 className="serif text-3xl">Upcoming Departures ({batches.length})</h2>
-              <p className="text-sm text-muted mt-1">
-                These dates show on the homepage. Empty? Site auto-fills next 5 weekends for the featured treks.
+              <LiveStatsRow />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6">
+                {CARDS.map((c, i) => (
+                  <AdminCard key={c.id} card={c} index={i} onOpen={() => setSection(c.id)} />
+                ))}
+              </div>
+
+              <p className="mt-14 text-xs text-cream/35">
+                Phase 1 · Foundation · Realtime sync via Supabase · Drive-based media · RLS-protected writes
               </p>
-            </div>
-            <button onClick={startNewBatch} className="px-4 py-2 rounded-full bg-ink text-cream text-sm">
-              + New Batch
-            </button>
-          </div>
-
-          {editingBatch && (
-            <div className="mb-6 p-5 rounded-2xl bg-mist border border-ink/10">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
-                <Field label="Trek">
-                  <select
-                    value={batchDraft.trek_id}
-                    onChange={(e) => setBatchDraft({ ...batchDraft, trek_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-ink/20 rounded bg-white"
-                  >
-                    <option value="">Select…</option>
-                    {treks.map((t) => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Start date">
-                  <input
-                    type="date"
-                    value={batchDraft.start_date}
-                    onChange={(e) => setBatchDraft({ ...batchDraft, start_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-ink/20 rounded bg-white"
-                  />
-                </Field>
-                <Field label="End date">
-                  <input
-                    type="date"
-                    value={batchDraft.end_date}
-                    onChange={(e) => setBatchDraft({ ...batchDraft, end_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-ink/20 rounded bg-white"
-                  />
-                </Field>
-                <Field label="Price (₹)">
-                  <input
-                    type="number"
-                    placeholder="Trek default"
-                    value={batchDraft.price}
-                    onChange={(e) => setBatchDraft({ ...batchDraft, price: e.target.value })}
-                    className="w-full px-3 py-2 border border-ink/20 rounded bg-white"
-                  />
-                </Field>
-                <Field label="Date label (optional)">
-                  <input
-                    type="text"
-                    placeholder="Dec 14-15"
-                    value={batchDraft.date_label}
-                    onChange={(e) => setBatchDraft({ ...batchDraft, date_label: e.target.value })}
-                    className="w-full px-3 py-2 border border-ink/20 rounded bg-white"
-                  />
-                </Field>
-                <Field label="Active">
-                  <label className="inline-flex items-center gap-2 mt-2">
-                    <input
-                      type="checkbox"
-                      checked={!!batchDraft.is_active}
-                      onChange={(e) => setBatchDraft({ ...batchDraft, is_active: e.target.checked })}
-                    />
-                    <span className="text-sm">Show on site</span>
-                  </label>
-                </Field>
-              </div>
-              <div className="mt-5 flex gap-3">
-                <button onClick={saveBatch} disabled={saving} className="px-4 py-2 rounded-full bg-ink text-cream text-sm">
-                  {saving ? 'Saving…' : editingBatch === 'new' ? 'Create batch' : 'Save changes'}
-                </button>
-                <button onClick={() => { setEditingBatch(null); setBatchDraft(emptyBatchDraft()); }} className="px-4 py-2 rounded-full border border-ink/20 text-sm">
-                  Cancel
-                </button>
-              </div>
-            </div>
+            </motion.div>
           )}
 
-          <div className="overflow-x-auto rounded-2xl border border-ink/10">
-            <table className="w-full text-sm">
-              <thead className="bg-ink/5 text-left">
-                <tr>
-                  <th className="px-4 py-3">Trek</th>
-                  <th className="px-4 py-3">Date range</th>
-                  <th className="px-4 py-3">Label</th>
-                  <th className="px-4 py-3">Price</th>
-                  <th className="px-4 py-3">Active</th>
-                  <th className="px-4 py-3 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {batches.length === 0 && !loading && (
-                  <tr><td colSpan={6} className="px-4 py-8 text-muted text-center">
-                    No batches yet. Run <code>schema_v3_batches.sql</code> to bootstrap, or click <strong>+ New Batch</strong>.
-                  </td></tr>
-                )}
-                {batches.map((b) => (
-                  <tr key={b.id} className="border-t border-ink/5">
-                    <td className="px-4 py-3 font-medium">{b.trek_label || b.trek_id}</td>
-                    <td className="px-4 py-3 text-ink/80">{b.start_date}{b.end_date ? ` → ${b.end_date}` : ''}</td>
-                    <td className="px-4 py-3 text-ink/60">{b.date_label || '—'}</td>
-                    <td className="px-4 py-3 font-medium">{b.price != null ? formatINR(b.price) : <span className="text-muted">trek default</span>}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${b.is_active ? 'bg-moss/20 text-ink' : 'bg-ink/10 text-muted'}`}>
-                        {b.is_active ? 'Live' : 'Hidden'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="inline-flex gap-3">
-                        <button onClick={() => startBatchEdit(b)} className="text-xs link-underline">Edit</button>
-                        <button onClick={() => deleteBatch(b.id)} className="text-xs link-underline text-ember">Delete</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* ============ TREKS ============ */}
-        <section>
-          <div className="flex items-baseline justify-between mb-6">
-            <h2 className="serif text-3xl">Treks ({treks.length})</h2>
-            <span className="text-xs text-muted">Edit price, active state, and tag line.</span>
-          </div>
-
-          <div className="overflow-x-auto rounded-2xl border border-ink/10">
-            <table className="w-full text-sm">
-              <thead className="bg-ink/5 text-left">
-                <tr>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Difficulty</th>
-                  <th className="px-4 py-3">Duration</th>
-                  <th className="px-4 py-3">Price</th>
-                  <th className="px-4 py-3">Bookings</th>
-                  <th className="px-4 py-3">Active</th>
-                  <th className="px-4 py-3 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading && (
-                  <tr><td className="px-4 py-6 text-muted" colSpan={7}>Loading…</td></tr>
-                )}
-                {!loading && treks.map((t) => {
-                  const isEditing = editingTrek === t.id;
-                  const isOpen = t.is_open !== false;
-                  return (
-                    <tr key={t.id} className="border-t border-ink/5">
-                      <td className="px-4 py-3">
-                        <div className="font-medium">{t.name}</div>
-                        <div className="text-xs text-muted">{t.id}</div>
-                      </td>
-                      <td className="px-4 py-3">{t.difficulty}</td>
-                      <td className="px-4 py-3">{t.duration}</td>
-                      <td className="px-4 py-3">
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            value={trekDraft.price ?? ''}
-                            onChange={(e) => setTrekDraft({ ...trekDraft, price: e.target.value })}
-                            className="w-28 px-2 py-1 border border-ink/20 rounded"
-                          />
-                        ) : (
-                          <span className="font-medium">{formatINR(t.price)}</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {isEditing ? (
-                          <label className="inline-flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={!!trekDraft.is_open}
-                              onChange={(e) => setTrekDraft({ ...trekDraft, is_open: e.target.checked })}
-                            />
-                            <span className="text-xs">{trekDraft.is_open ? 'Open' : 'Closed'}</span>
-                          </label>
-                        ) : (
-                          <button
-                            onClick={() => quickToggleOpen(t)}
-                            title="Click to toggle"
-                            className={`text-xs px-2.5 py-1 rounded-full border transition ${
-                              isOpen
-                                ? 'bg-moss/20 text-ink border-moss/40 hover:bg-moss/30'
-                                : 'bg-ink/10 text-muted border-ink/15 hover:bg-ink/15'
-                            }`}
-                          >
-                            {isOpen ? '● Open' : '○ Closed'}
-                          </button>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {isEditing ? (
-                          <input
-                            type="checkbox"
-                            checked={!!trekDraft.is_active}
-                            onChange={(e) => setTrekDraft({ ...trekDraft, is_active: e.target.checked })}
-                          />
-                        ) : (
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${t.is_active ? 'bg-moss/20 text-ink' : 'bg-ink/10 text-muted'}`}>
-                            {t.is_active ? 'Live' : 'Hidden'}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {isEditing ? (
-                          <div className="inline-flex gap-2">
-                            <button onClick={saveTrekEdit} disabled={saving} className="px-3 py-1 rounded-full bg-ink text-cream text-xs">
-                              {saving ? 'Saving…' : 'Save'}
-                            </button>
-                            <button onClick={() => setEditingTrek(null)} className="px-3 py-1 rounded-full border border-ink/20 text-xs">
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <button onClick={() => startTrekEdit(t)} className="text-xs link-underline">Edit</button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* ============ BOOKINGS ============ */}
-        <section>
-          <h2 className="serif text-3xl mb-6">Recent bookings ({bookings.length})</h2>
-          <div className="rounded-2xl border border-ink/10 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-ink/5 text-left">
-                <tr>
-                  <th className="px-4 py-3">When</th>
-                  <th className="px-4 py-3">Trek</th>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Contact</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">People</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bookings.length === 0 && (
-                  <tr><td className="px-4 py-6 text-muted" colSpan={6}>No bookings yet.</td></tr>
-                )}
-                {bookings.map((b) => (
-                  <tr key={b.id} className="border-t border-ink/5">
-                    <td className="px-4 py-3 text-xs text-muted">{new Date(b.created_at).toLocaleString()}</td>
-                    <td className="px-4 py-3">{b.trek_id}</td>
-                    <td className="px-4 py-3">{b.full_name}</td>
-                    <td className="px-4 py-3">{b.phone}</td>
-                    <td className="px-4 py-3">{b.trek_date}</td>
-                    <td className="px-4 py-3">{b.party_size}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+          {section && ActiveView && (
+            <motion.div
+              key={section}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.45, ease: [0.7, 0, 0.2, 1] }}
+            >
+              <ActiveView />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
 }
 
-function Field({ label, children }) {
+function LiveStatsRow() {
+  const [stats, setStats] = useState({
+    treks: { count: null, active: null },
+    bookings: { count: null, recent: null },
+    gallery: null,
+    announcements: null
+  });
+
+  async function load() {
+    const [
+      treksAll, treksLive,
+      bookingsAll, bookingsToday,
+      galleryActive,
+      annActive
+    ] = await Promise.all([
+      supabase.from('treks').select('id', { count: 'exact', head: true }),
+      supabase.from('treks').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      supabase.from('bookings').select('id', { count: 'exact', head: true }),
+      supabase.from('bookings').select('id', { count: 'exact', head: true }).gte('created_at', new Date(Date.now() - 86400000).toISOString()),
+      supabase.from('gallery_images').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      supabase.from('announcements').select('id', { count: 'exact', head: true }).eq('is_active', true)
+    ]);
+    setStats({
+      treks: { count: treksAll.count, active: treksLive.count },
+      bookings: { count: bookingsAll.count, recent: bookingsToday.count },
+      gallery: galleryActive.count,
+      announcements: annActive.count
+    });
+  }
+
+  useEffect(() => {
+    load();
+    const channel = supabase
+      .channel('realtime:admin-stats')
+      .on('postgres_changes', { event: '*', schema: 'public' }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const items = [
+    { label: 'Active Treks',       value: stats.treks.active, total: stats.treks.count, icon: Activity, tint: 'text-moss' },
+    { label: 'Recent Bookings',    value: stats.bookings.recent, total: stats.bookings.count, icon: ClipboardList, tint: 'text-ember', subLabel: 'last 24h' },
+    { label: 'Live Gallery Photos', value: stats.gallery, icon: Camera, tint: 'text-amber-300' },
+    { label: 'Announcements Live', value: stats.announcements, icon: Megaphone, tint: 'text-rose-300' }
+  ];
+
   return (
-    <div>
-      <label className="block text-[10px] uppercase tracking-[0.2em] text-muted mb-1.5">{label}</label>
-      {children}
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12 lg:mb-16">
+      {items.map((it, i) => {
+        const Icon = it.icon;
+        return (
+          <motion.div
+            key={it.label}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: i * 0.05 }}
+            className="rounded-2xl bg-white/[0.03] backdrop-blur-sm border border-cream/10 p-5"
+          >
+            <div className="flex items-center justify-between">
+              <span className="eyebrow text-cream/55">{it.label}</span>
+              <Icon size={14} className={it.tint} />
+            </div>
+            <div className="mt-3 serif text-3xl text-cream leading-none">
+              {it.value == null ? <span className="text-cream/30">—</span> : it.value}
+              {it.total != null && <span className="ml-2 text-base text-cream/30">/ {it.total}</span>}
+            </div>
+            {it.subLabel && <div className="mt-1 text-[11px] text-cream/40">{it.subLabel}</div>}
+          </motion.div>
+        );
+      })}
     </div>
+  );
+}
+
+function AdminCard({ card, index, onOpen }) {
+  const Icon = card.icon;
+  return (
+    <motion.button
+      onClick={onOpen}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: (index % 4) * 0.06, ease: [0.7, 0, 0.2, 1] }}
+      whileHover={{ y: -4 }}
+      className="group relative text-left rounded-2xl p-6 lg:p-7 bg-white/[0.03] backdrop-blur-sm border border-cream/10 hover:border-ember/40 transition-colors duration-500 overflow-hidden focus:outline-none focus:ring-2 focus:ring-ember/40"
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br ${card.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-700`} aria-hidden />
+      <div className="relative">
+        <div className="h-12 w-12 rounded-full bg-cream/10 text-ember grid place-items-center transition-transform duration-500 group-hover:scale-110 group-hover:bg-ember group-hover:text-cream">
+          <Icon size={20} strokeWidth={1.6} />
+        </div>
+        <h3 className="serif text-2xl mt-6 tracking-tight font-medium leading-tight">{card.title}</h3>
+        <p className="mt-3 text-sm text-cream/60 leading-relaxed">{card.desc}</p>
+        <div className="mt-6 flex items-center gap-2 text-xs text-ember opacity-70 group-hover:opacity-100 transition-opacity">
+          Open <span className="transition-transform group-hover:translate-x-1">→</span>
+        </div>
+      </div>
+      <div className="pointer-events-none absolute inset-0 rounded-2xl shadow-[inset_0_0_0_1px_rgba(210,119,46,0)] group-hover:shadow-[inset_0_0_0_1px_rgba(210,119,46,0.25),0_30px_60px_-30px_rgba(210,119,46,0.4)] transition-shadow duration-700" />
+    </motion.button>
   );
 }

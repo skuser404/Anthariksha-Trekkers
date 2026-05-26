@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Clock, Mountain, TrendingUp, Calendar, Check, ArrowRight, Sun, Navigation, Tag } from 'lucide-react';
 import { TREK_PRICES, useLiveTreks, formatINR } from '../lib/treks.js';
+import { toDriveImageURL } from '../lib/drive.js';
+import DriveImage from './DriveImage.jsx';
+import TrekSlideshow from './TrekSlideshow.jsx';
+import TrekGuidelines from './TrekGuidelines.jsx';
+import NearbyExplore from './NearbyExplore.jsx';
 
 const IMG = {
   sunrise: '/images/hero-sunrise.jpg',
@@ -46,13 +51,18 @@ const treks = [
     distance: '22 km',
     bestSeason: 'Sept–Feb',
     fromBangalore: '330 km',
-    tag: "Karnataka's classic ridgeline. The horse-face peak.",
+    tag: 'Where the ridge meets the sky.',
+    story: [
+      'Kudremukh rises through layers of rolling grasslands, cloud forests, hidden streams, and mist-covered ridgelines. Every trail feels untouched — silent except for the sound of wind moving through the Western Ghats.',
+      'You cross seven hills before the summit reveals itself. By then the valley has filled with cloud, and the only sound left is your own breath.',
+      'This is the trek that began it all for us. Two days in, you understand why.'
+    ],
     highlights: [
-      'Horse-face summit (Kudremukh = "horse face" in Kannada)',
-      'Crossing 7 rolling green hills, shola forests, stream crossings',
-      'Kudremukh National Park biodiversity',
-      'Homestay night in Mullodi village',
-      'Samse Tea Estate & Horanadu temple en route'
+      'Seven rolling hills, shola cloud-forests, and stream crossings on the way to the summit',
+      'Inside Kudremukh National Park — one of the Western Ghats\' last unbroken biodiversity belts',
+      'The classic "horse-face" silhouette at 1,894 m — visible from the ridge before you reach it',
+      'Homestay night in Mullodi village — home-cooked meals, no rough camping',
+      'Sunrise viewpoint walk on Sunday morning before departure'
     ],
     itinerary: [
       { day: 'Day 0 · Friday', title: 'Departure', items: ['9:30 PM pickup from Majestic, Bangalore', 'Overnight drive via Samse Tea Estate & Horanadu temple', 'Reach Kalasa/Mullodi homestay by 6 AM'] },
@@ -137,7 +147,7 @@ const treks = [
   {
     id: 'netravati',
     name: 'Netravati Peak Trek',
-    region: 'Charmadi · Karnataka',
+    region: 'Samse · Karnataka',
     image: IMG.cliff,
     duration: '2 Days',
     difficulty: 'Difficult',
@@ -147,16 +157,102 @@ const treks = [
     fromBangalore: '320 km',
     tag: 'Where clouds spill over the cliff.',
     highlights: [
-      'Cloud-spillover phenomenon at the cliff edge',
-      'Stream crossings, shola forests, grassland ridges',
-      'Jeep ride to base (an adventure on its own)',
-      'One of the best monsoon treks in Karnataka',
-      'Lesser-explored — fewer crowds than Kudremukh'
+      '30-min complimentary open-jeep ride from homestay to the trek base — your rugged Ghats welcome',
+      'Experienced trek lead with every batch — small-group pacing, real safety, personalised attention',
+      'Comfortable tent stay (double / triple sharing) with mattresses + sleeping bags',
+      'Pick your package — Trek-only or Trek + Bangalore transport. Camping, meals, permits & jeep ride included in both',
+      'Cross through Kudremukh National Park — shola grasslands, perennial streams, ridge walks, 1,520 m summit'
     ],
+    included: ['Transport', 'Meals', 'Sightseeing', 'Permits', 'Trek Lead', 'Stay', 'Trekking', 'Cashback'],
+    pickupPoints: [
+      { name: 'Indiranagar', detail: 'KFC Road', time: '9:00–9:20 PM' },
+      { name: 'Domlur', detail: 'Union Bank', time: '9:30–9:40 PM' },
+      { name: 'Yeshwantpur', detail: 'Metro Station entrance', time: '9:20–9:30 PM' },
+      { name: 'Goraguntepalya', detail: 'People Tree Hospitals', time: '10:45–10:50 PM' }
+    ],
+    thingsToCarry: [
+      'Trekking shoes', 'Warm layers', 'Raincoat / rain cover', 'Backpack (waterproof lined)',
+      'Head torch + spare batteries', 'LED torch', 'Personal medical kit', 'Mosquito repellent',
+      'Water bottle / hydration pack', 'Extra clothes', 'Comfortable clothes', 'Towel',
+      'Camera', 'Power bank', 'Sunscreen (SPF 40+)', 'Valid photo ID'
+    ],
+    knowBeforeYouGo: [
+      'Every trekker must e-sign the Trekking Acknowledgement & Terms form (emailed right after booking) before departure',
+      'Itinerary may shift between exploration day and trek day based on weather, permits, or on-ground conditions. Total distance, meal plan, and return timing stay the same.',
+      'Bus is non-AC with push-back seats — boarding is first-come, first-served. Confirmed pickup times are shared 4–6 hours before departure.',
+      'Meals are simple South-Indian homestyle (vegetarian by default). Dietary restrictions / allergies must be flagged 48 hours before departure.',
+      'Homestay rooms are shared (4–6 trekkers per room) with shared washrooms on vacancy basis.',
+      'Optional tent stay on the homestay rooftop with mattress — may be cancelled by the trek lead in case of heavy rain or logistical reasons.',
+      'Complimentary jeep segments are offered, but we hold no liability for route changes, delays, or cancellations due to weather or road conditions.',
+      'Jeep seating is open-air on rough terrain — expect dust, bumps, and full exposure to the elements.',
+      'Carry valid photo ID at all times — forest staff may deny entry for prohibited items or missing documents (no refunds or alternates in such cases).',
+      'Trek pace and descent timings are set by the lead based on terrain, weather, group fitness, and visibility.',
+      'Bring your own protective gear — sturdy footwear, raincoat, hydration pack, energy snacks.',
+      'Monsoon treks come with risks — slippery trails and leeches are common. Follow the lead\'s instructions at all times.',
+      'Expected return to Bangalore is between Sunday midnight and 5 AM. Traffic, roadworks, or toll delays may extend this — no refunds for late arrivals.',
+      'Loss, theft, or damage to personal belongings is the participant\'s responsibility — we are not liable for items left unattended in campsites or vehicles.',
+      'Mid-journey cancellation (weather / official notice) — an alternate weekend trek will be arranged.',
+      'Pre-departure cancellation (before the bus leaves) — choose another available trek the same date, reschedule, or take a full wallet refund.',
+      'Anthariksha Trekkers acts as a facilitator between you and independent service providers (homestay, transport, jeep). We are not liable for injury, illness, delay, loss, or dissatisfaction arising from external factors.'
+    ],
+    faqs: [
+      {
+        q: 'Is the Netravati trek difficult?',
+        a: 'Easy to moderate. There are no extreme sections, but you\'ll cross steep ascents, uneven terrain, and ridge walks. Sturdy trekking shoes and a trekking pole are strongly recommended.'
+      },
+      {
+        q: 'How long is the Netravathi Peak trek?',
+        a: 'About 13–14 km of actual trekking spread over 2 nights and 1 main trekking day. The route starts from the edge of Kudremukh National Park and climbs through dense forest, valleys, and waterfalls before reaching the summit.'
+      },
+      {
+        q: 'Kudremukh vs Netravati — which is better?',
+        a: 'Netravati is the gentler weekend — around 14 km, lush forest, perennial streams, ideal for first-time and moderate trekkers. Kudremukh is the bigger climb — 20+ km, longer endurance days, broader vistas. Pick Netravati if it\'s your first Ghats trek, Kudremukh if you want the bigger payoff.'
+      }
+    ],
+    policies: {
+      confirmation: [
+        'You receive a booking confirmation voucher by email within 24 hours of payment.',
+        'If your preferred batch is unavailable, we offer an alternate batch of your preference and send a fresh confirmation voucher.',
+        'You may also choose to cancel pre-confirmation for a full refund.'
+      ],
+      cancellation: [
+        '60+ days before the travel date · 10% of total tour cost is charged as cancellation fee',
+        '30–60 days before · 25% of total tour cost is charged',
+        '15–30 days before · 50% of total tour cost is charged',
+        '7–15 days before · 75% of total tour cost is charged',
+        '0–7 days before · 100% of total tour cost is charged',
+        'In case of unforeseen weather, union issues, government restrictions, or any other force-majeure event, the trek may be cancelled. Alternate feasible options will be offered — cash refunds are not available in such cases.'
+      ]
+    },
     itinerary: [
-      { day: 'Day 0 · Friday', title: 'Departure', items: ['9:30 PM pickup from Bangalore', 'Overnight bus to Samse village'] },
-      { day: 'Day 1 · Saturday', title: 'Climb to Camp', items: ['6 AM reach Samse', 'Breakfast at homestay', 'Jeep ride to trek base', 'Trek through shola forest start 8 AM', 'Stream crossings + ridge walks', 'Reach meadow camp by 2 PM', 'Sunset at the cliff edge', 'Camp dinner under the stars'] },
-      { day: 'Day 2 · Sunday', title: 'Summit & Return', items: ['Sunrise from peak', 'Breakfast on the meadow', 'Summit push + photos', 'Lunch at the cliff edge', 'After having lunch, descent starts', 'Reach base village by 3 PM', 'Depart 4 PM, reach Bangalore by midnight'] }
+      { day: 'Day 1 · Friday', title: 'Departure from Bangalore', items: [
+        '9:00 PM — overnight pickup from Bangalore',
+        'Boarding · Decathlon Sports, Brigade Road',
+        'Boarding · Yeshwanthpur Metro Station entrance',
+        'Boarding · Goraguntepalya, People Tree Hospitals',
+        'Meet your group, settle in for the overnight ride to the Western Ghats'
+      ] },
+      { day: 'Day 2 · Saturday', title: 'Homestay Arrival & Local Exploration', items: [
+        '6:00 AM — reach the homestay near Samse',
+        'Freshen up, hot breakfast at the homestay',
+        'Visit Samse Tea Estate — rolling green plantations, photo stop',
+        'Kalasa Hanging Bridge — quiet riverside walk + scenic views',
+        'Kalasa Temple — ancient Shiva shrine',
+        'Horanadu Temple darshan',
+        'Somavathi River — relax by the calm waters',
+        'Return to homestay · evening leisure + dinner',
+        'Early sleep — trek day tomorrow'
+      ] },
+      { day: 'Day 3 · Sunday', title: 'Netravathi Peak Trek & Return', items: [
+        '6:00 AM start from the homestay',
+        'Drive to the trek base, begin ascent towards Netravathi Peak',
+        'Trail through dense forest sections → open grasslands → ridge walks',
+        'Reach the peak — panoramic Western Ghats views',
+        'After lunch on the peak, descent starts',
+        'Return to homestay for a freshly prepared lunch',
+        'Pack up, depart by afternoon',
+        'Expected arrival in Bangalore late night'
+      ] }
     ]
   },
   {
@@ -303,30 +399,6 @@ const treks = [
       { day: 'Day 0 · Friday', title: 'Departure', items: ['9 PM pickup from Bangalore'] },
       { day: 'Day 1 · Saturday', title: 'Beach Hike', items: ['7 AM reach Gokarna town', 'Mahabaleshwara Temple visit', 'Drop bags + breakfast', 'Begin coastal walk 9 AM from Gokarna Beach', 'Cliff trail to Kudle → Om Beach', 'Lunch at Om Beach', 'Continue to Half-Moon + Paradise Beach', 'Camp/shack stay + sunset + dinner'] },
       { day: 'Day 2 · Sunday', title: 'Town + Return', items: ['Sunrise on Kudle Beach', 'Return walk to Gokarna town', 'Optional Mirjan Fort / Yana caves stop', 'Cafe brunch in town', 'Depart 3 PM, reach Bangalore midnight'] }
-    ]
-  },
-  {
-    id: 'dudhsagar',
-    name: 'Dudhsagar Falls Trek',
-    region: 'Goa-Karnataka border',
-    image: IMG.fall,
-    duration: '1 Day',
-    difficulty: 'Moderate',
-    altitude: '310 m',
-    distance: '14 km',
-    bestSeason: 'Oct–May',
-    fromBangalore: '560 km',
-    tag: "India's tallest waterfall, up close. (Closed in monsoon.)",
-    highlights: [
-      '310-metre milky cascade — among India\'s tallest waterfalls',
-      'Walk along the live Konkan Railway track (caution)',
-      'Castle Rock to falls — 14 km through Bhagwan Mahaveer Sanctuary',
-      'Multiple tunnels + bridges + iconic train crossings',
-      'Plunge pool swim at the base'
-    ],
-    itinerary: [
-      { day: 'Friday Night', title: 'Departure', items: ['8 PM pickup from Bangalore'] },
-      { day: 'Saturday', title: 'Falls Day', items: ['5 AM reach Castle Rock railway station', 'Breakfast + permits', 'Track walk begins 7 AM through Bhagwan Mahaveer Sanctuary', 'Cross multiple tunnels + bridges (5-6 hr one way)', 'Reach falls by noon', 'Swim + lunch at the plunge pool', 'After having lunch, descent starts', 'Return walk along the track by 4 PM', 'Depart, reach Bangalore Sunday morning'] }
     ]
   },
   {
@@ -480,66 +552,6 @@ const treks = [
       { day: 'Day 2 · Saturday', title: 'Caves & Forest', items: ['Edakkal Caves morning visit', 'Lunch in Sulthan Bathery', 'Banasura Sagar Dam', 'Soochipara Falls', 'Bonfire + Kerala dinner'] },
       { day: 'Day 3 · Sunday', title: 'Return', items: ['Tea estate walk', 'Brunch', 'Optional Thirunelli temple stop', 'Depart 1 PM, reach Bangalore by 10 PM'] }
     ]
-  },
-  {
-    id: 'meghalaya',
-    name: 'Meghalaya Adventure Expedition',
-    region: 'Shillong · North-East India',
-    image: IMG.fall,
-    duration: '7 Days',
-    difficulty: 'Moderate',
-    altitude: 'Varies',
-    distance: 'Multi-stop',
-    bestSeason: 'Oct–May',
-    fromBangalore: 'Fly to Guwahati',
-    tag: 'Living root bridges. Cherrapunji. Dawki.',
-    highlights: [
-      'Double Decker Living Root Bridge — Nongriat (UNESCO tentative)',
-      'Umngot River, Dawki — boat floats on glass-clear water',
-      'Nohkalikai Falls — India\'s tallest plunge waterfall',
-      'Mawlynnong — "Cleanest village in Asia"',
-      'Krang Suri Falls (Jowai) + Mawphlang Sacred Forest'
-    ],
-    itinerary: [
-      { day: 'Day 1', title: 'Guwahati → Shillong', items: ['Fly into Guwahati', 'Drive to Shillong (~3 hr)', 'Police Bazaar evening walk'] },
-      { day: 'Day 2', title: 'Shillong City', items: ['Elephant Falls', 'Shillong Peak', 'Don Bosco Museum', 'Ward\'s Lake evening'] },
-      { day: 'Day 3', title: 'Cherrapunji', items: ['Drive to Cherrapunji (Sohra)', 'Nohkalikai Falls', 'Mawsmai Caves', 'Seven Sisters Falls', 'Arwah Caves', 'Homestay night'] },
-      { day: 'Day 4', title: 'Double Decker Root Bridge', items: ['Tyrna village start (3,500 steps down)', 'Double-decker living root bridge trek', 'Rainbow Falls', 'After lunch, climb back (the toughest day)', 'Stay at Tyrna / Cherrapunji'] },
-      { day: 'Day 5', title: 'Mawlynnong + Dawki', items: ['Asia\'s cleanest village', 'Single root bridge at Riwai', 'Drive to Dawki', 'Boat ride on the crystal-clear Umngot River', 'Border viewpoint'] },
-      { day: 'Day 6', title: 'Krang Suri + Back', items: ['Drive to Jowai', 'Krang Suri Falls swim', 'Return to Shillong', 'Live music night at a cafe'] },
-      { day: 'Day 7', title: 'Departure', items: ['Drive to Guwahati', 'Flight back to Bangalore'] }
-    ]
-  },
-  {
-    id: 'himalayan-basecamp',
-    name: 'Himalayan Basecamp Expedition',
-    region: 'Uttarakhand · Himalayas',
-    image: IMG.cliff,
-    duration: '7-10 Days',
-    difficulty: 'Difficult',
-    altitude: '4,200 m+',
-    distance: '60–90 km',
-    bestSeason: 'Apr–Jun · Sept–Oct',
-    fromBangalore: 'Fly to Dehradun',
-    tag: 'Our flagship Himalayan expedition.',
-    highlights: [
-      'High-altitude bugyals (alpine meadows)',
-      'Glacier moraines + hanging glaciers',
-      'Views of Nanda Devi, Trishul, Changabang, Kamet peaks',
-      'Remote Garhwal / Kumaon villages',
-      'IMF trek lead + acclimatisation protocol'
-    ],
-    itinerary: [
-      { day: 'Day 1', title: 'Arrival', items: ['Fly to Dehradun / Haridwar', 'Briefing + gear check', 'Group dinner'] },
-      { day: 'Day 2', title: 'Drive to Basecamp Village', items: ['Drive to Lohajung / Joshimath / Munsiyari (~10 hr)', 'Scenic mountain drive', 'Acclimatisation rest'] },
-      { day: 'Day 3', title: 'Acclimatisation Hike', items: ['Short hike to ~2,500 m', 'Briefing on AMS protocol', 'Pine forest walk'] },
-      { day: 'Day 4', title: 'To Alpine Camp', items: ['Trek to first camp (~3,000 m)', 'Forests → meadows transition', 'Tent camp dinner'] },
-      { day: 'Day 5', title: 'Bugyal Camp', items: ['Trek to alpine camp (~3,800 m)', 'Bugyals — high meadows', 'Sunset on the Himalayas'] },
-      { day: 'Day 6', title: 'Glacier Basecamp', items: ['Push to glacier basecamp (~4,200 m+)', 'Snowfields + moraine', 'Rest before summit attempt'] },
-      { day: 'Day 7', title: 'Summit Day', items: ['Pre-dawn ascent with headlamps', 'Reach summit / glacier point', 'Sunrise over Nanda Devi', 'After summit, descent starts', 'Return to alpine camp'] },
-      { day: 'Day 8–9', title: 'Descent to Roadhead', items: ['Trek back through forest', 'Hot meal + rest day at village'] },
-      { day: 'Day 10', title: 'Drive Back & Departure', items: ['Drive to Dehradun', 'Group dinner', 'Flight back to Bangalore'] }
-    ]
   }
 ];
 
@@ -581,22 +593,13 @@ export default function FeaturedTreks() {
     <section id="treks" className="bg-cream text-ink py-24 lg:py-32">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.9, ease: [0.7, 0, 0.2, 1] }}
-          className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-14 lg:mb-20"
+          className="mb-14 lg:mb-20 text-center"
         >
-          <div>
-            <span className="eyebrow text-muted">Featured Treks</span>
-            <h2 className="serif mt-4 text-5xl md:text-6xl lg:text-7xl tracking-tight font-medium">
-              Five signatures. <em className="italic">One range.</em>
-            </h2>
-            <p className="mt-6 max-w-xl text-ink/70 text-[15px] leading-relaxed">
-              Our most-booked weekend expeditions across the Western Ghats.
-            </p>
-          </div>
-          <div className="serif text-7xl text-ember/30 select-none">{String(featured.length).padStart(2, '0')}</div>
+          <span className="eyebrow text-muted tracking-[0.3em]">— Featured Treks —</span>
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -620,7 +623,22 @@ export default function FeaturedTreks() {
   );
 }
 
+const TREK_FILTERS = [
+  { id: 'all',       label: 'All',         match: () => true },
+  { id: 'easy',      label: 'Easy',        match: (t) => /easy/i.test(t.difficulty || '') },
+  { id: 'moderate',  label: 'Moderate',    match: (t) => /moderate/i.test(t.difficulty || '') && !/hard|tough|diffi/i.test(t.difficulty || '') },
+  { id: 'tough',     label: 'Tough',       match: (t) => /tough|hard|diffi/i.test(t.difficulty || '') },
+  { id: 'sunrise',   label: 'Sunrise',     match: (t) => /sunrise|night/i.test(`${t.name} ${t.tag || ''}`) },
+  { id: 'waterfall', label: 'Waterfalls',  match: (t) => /falls|waterfall|cascade/i.test(`${t.name} ${t.tag || ''}`) },
+  { id: 'beach',     label: 'Beach',       match: (t) => /beach|coast|gokarna/i.test(`${t.name} ${t.tag || ''}`) },
+  { id: 'multi',     label: 'Multi-Day',   match: (t) => /3 Days|4 Days|5 Days|6 Days|7 Days|10 Days|expedition/i.test(`${t.duration || ''} ${t.name}`) }
+];
+
 function AllTreksModal({ treks, onClose, onSelect }) {
+  const [filter, setFilter] = useState('all');
+  const activeFilter = TREK_FILTERS.find((f) => f.id === filter) || TREK_FILTERS[0];
+  const filtered = treks.filter(activeFilter.match);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -632,23 +650,58 @@ function AllTreksModal({ treks, onClose, onSelect }) {
       aria-modal="true"
       aria-label="All trips"
     >
-      <header className="sticky top-0 z-10 px-6 lg:px-10 py-5 flex items-center justify-between bg-base/70 backdrop-blur border-b border-cream/10">
-        <div>
-          <div className="eyebrow text-ember">All Expeditions</div>
-          <div className="serif text-2xl text-cream mt-1">Twenty trails. One obsession.</div>
+      <header className="sticky top-0 z-10 px-6 lg:px-10 py-5 bg-base/70 backdrop-blur border-b border-cream/10">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="eyebrow text-ember">All Expeditions</div>
+            <div className="serif text-2xl text-cream mt-1">{filtered.length} of {treks.length} trails</div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close all trips"
+            className="h-11 w-11 rounded-full bg-cream/10 text-cream hover:bg-ember grid place-items-center transition-colors"
+          >
+            <X size={20} />
+          </button>
         </div>
-        <button
-          onClick={onClose}
-          aria-label="Close all trips"
-          className="h-11 w-11 rounded-full bg-cream/10 text-cream hover:bg-ember grid place-items-center transition-colors"
-        >
-          <X size={20} />
-        </button>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          {TREK_FILTERS.map((f) => {
+            const isActive = filter === f.id;
+            const count = treks.filter(f.match).length;
+            if (count === 0 && f.id !== 'all') return null;
+            return (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id)}
+                className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-300 border ${
+                  isActive
+                    ? 'bg-ember text-cream border-ember shadow-[0_0_20px_rgba(210,119,46,0.4)]'
+                    : 'bg-cream/[0.05] text-cream/75 border-cream/15 hover:border-cream/40 hover:bg-cream/10'
+                }`}
+              >
+                <span>{f.label}</span>
+                <span className={`text-[10px] tracking-widest ${isActive ? 'text-cream/75' : 'text-cream/40'}`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-6 lg:px-10 py-10">
+      <div
+        data-lenis-prevent
+        className="flex-1 overflow-y-auto modal-scroll modal-scroll-dark px-6 lg:px-10 py-10"
+      >
+        {filtered.length === 0 ? (
+          <div className="max-w-md mx-auto text-center text-cream/55 py-20">
+            <div className="serif text-2xl text-cream mb-2">Nothing matches</div>
+            <p className="text-sm">Try a different filter — every trail is a click away.</p>
+          </div>
+        ) : (
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6">
-          {treks.map((t, i) => (
+          {filtered.map((t, i) => (
             <motion.button
               key={t.id}
               onClick={() => onSelect(t)}
@@ -659,7 +712,7 @@ function AllTreksModal({ treks, onClose, onSelect }) {
               className="group text-left rounded-2xl overflow-hidden bg-cream/[0.04] border border-cream/10 hover:border-ember/40 transition-colors duration-500 focus:outline-none"
             >
               <div className="image-hover relative aspect-[5/4] overflow-hidden">
-                <img src={t.image} alt={t.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                <DriveImage src={t.image} alt={t.name} className="absolute inset-0 w-full h-full object-cover" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />
                 <div className="absolute inset-0 bg-gradient-to-t from-base/90 to-transparent" />
                 <div className="absolute top-3 left-3 flex gap-1.5">
                   <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-[0.15em] bg-cream/15 text-cream/90 backdrop-blur">
@@ -670,9 +723,16 @@ function AllTreksModal({ treks, onClose, onSelect }) {
                   </span>
                 </div>
                 {t.price != null && (
-                  <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-ember text-cream text-[11px] font-medium">
-                    {formatINR(t.price)}
-                  </div>
+                  t.offerPrice != null && t.offerPrice < t.price ? (
+                    <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-ember text-cream text-[11px] font-medium shadow-[0_0_18px_rgba(210,119,46,0.55)]">
+                      <span>{formatINR(t.offerPrice)}</span>
+                      <span className="line-through text-cream/60 text-[10px]">{formatINR(t.price)}</span>
+                    </div>
+                  ) : (
+                    <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-ember text-cream text-[11px] font-medium">
+                      {formatINR(t.price)}
+                    </div>
+                  )
                 )}
                 <div className="absolute bottom-3 left-3 right-3">
                   <div className="serif text-lg text-cream leading-tight">{t.name}</div>
@@ -682,6 +742,7 @@ function AllTreksModal({ treks, onClose, onSelect }) {
             </motion.button>
           ))}
         </div>
+        )}
       </div>
     </motion.div>
   );
@@ -700,7 +761,7 @@ function TrekCard({ trek, index, onOpen }) {
       className="group relative flex flex-col rounded-2xl bg-white/60 backdrop-blur border border-ink/5 overflow-hidden shadow-[0_1px_0_rgba(0,0,0,0.04)] hover:shadow-[0_30px_60px_-20px_rgba(20,25,26,0.25)] transition-shadow duration-500"
     >
       <div className="image-hover relative aspect-[5/4] overflow-hidden">
-        <img src={trek.image} alt={trek.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+        <DriveImage src={trek.image} alt={trek.name} className="absolute inset-0 w-full h-full object-cover" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
         <div className="absolute top-4 left-4 flex gap-2">
           <Pill>{trek.duration}</Pill>
@@ -720,7 +781,14 @@ function TrekCard({ trek, index, onOpen }) {
             {trek.price != null && (
               <div className="text-right shrink-0">
                 <div className="eyebrow text-cream/70">From</div>
-                <div className="serif text-2xl text-cream font-medium leading-none mt-1">{formatINR(trek.price)}</div>
+                {trek.offerPrice != null && trek.offerPrice < trek.price ? (
+                  <>
+                    <div className="serif text-2xl text-cream font-medium leading-none mt-1">{formatINR(trek.offerPrice)}</div>
+                    <div className="text-xs text-cream/55 line-through mt-1">{formatINR(trek.price)}</div>
+                  </>
+                ) : (
+                  <div className="serif text-2xl text-cream font-medium leading-none mt-1">{formatINR(trek.price)}</div>
+                )}
               </div>
             )}
           </div>
@@ -743,16 +811,14 @@ function TrekCard({ trek, index, onOpen }) {
           >
             Read More <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
           </button>
-          <a
-            href={`https://wa.me/919902704361?text=${encodeURIComponent(
-              `Hey Anthariksha, I want to book the ${trek.name}.${trek.price != null ? `\nPrice: ${formatINR(trek.price)}` : ''}`
-            )}`}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={() => onOpen(trek, ref.current)}
+            aria-label={`Review itinerary then book ${trek.name}`}
             className="inline-flex items-center gap-2 rounded-full bg-ink text-cream px-4 py-2 text-xs font-medium hover:bg-ember transition-colors"
           >
             Book →
-          </a>
+          </button>
         </div>
       </div>
 
@@ -817,16 +883,27 @@ function TrekModal({ trek, onClose }) {
         transition={{ duration: 0.55, ease: [0.7, 0, 0.2, 1] }}
         className="relative z-10 w-full lg:my-10 lg:mx-6 lg:max-w-5xl bg-cream text-ink rounded-none lg:rounded-3xl overflow-hidden flex flex-col max-h-[100vh] lg:max-h-[90vh]"
       >
-        <div className="relative h-56 sm:h-72 lg:h-80 overflow-hidden">
-          <motion.img
-            initial={{ scale: 1.15 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 1.4, ease: [0.7, 0, 0.2, 1] }}
-            src={trek.image}
-            alt={trek.name}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-black/30" />
+        <div className="relative h-56 sm:h-72 lg:h-80 overflow-hidden group/slideshow">
+          {(() => {
+            const heroImages = Array.isArray(trek.gallery) && trek.gallery.filter(Boolean).length > 0
+              ? trek.gallery.filter(Boolean)
+              : [trek.image].filter(Boolean);
+            return heroImages.length > 1 ? (
+              <TrekSlideshow images={heroImages} />
+            ) : (
+              <motion.img
+                initial={{ scale: 1.15 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 1.4, ease: [0.7, 0, 0.2, 1] }}
+                src={toDriveImageURL(trek.image)}
+                alt={trek.name}
+                referrerPolicy="no-referrer"
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/ridge-peak.jpg'; }}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            );
+          })()}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-black/30 pointer-events-none" />
 
           <button
             onClick={onClose}
@@ -864,7 +941,36 @@ function TrekModal({ trek, onClose }) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 sm:px-8 lg:px-10 py-8 lg:py-10">
+        <div
+          data-lenis-prevent
+          className="flex-1 overflow-y-auto modal-scroll px-5 sm:px-8 lg:px-10 py-8 lg:py-10"
+        >
+          {trek.story && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.7, ease: [0.7, 0, 0.2, 1] }}
+              className="mb-10 max-w-2xl space-y-5"
+            >
+              {trek.story.map((para, i) => (
+                <motion.p
+                  key={i}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35 + i * 0.15, duration: 0.7 }}
+                  className={`serif leading-relaxed tracking-tight ${
+                    i === 0
+                      ? 'text-2xl lg:text-[1.65rem] text-ink/95 font-medium'
+                      : 'text-lg lg:text-[1.15rem] text-ink/75'
+                  }`}
+                >
+                  {para}
+                </motion.p>
+              ))}
+              <div className="h-px w-12 bg-ember/60 mt-8" />
+            </motion.div>
+          )}
+
           {trek.price != null && (
             <motion.div
               initial={{ opacity: 0, y: 12 }}
@@ -876,7 +982,18 @@ function TrekModal({ trek, onClose }) {
                 <Tag size={18} className="text-ember" />
                 <div>
                   <div className="eyebrow text-ember">All-Inclusive Fee</div>
-                  <div className="serif text-3xl lg:text-4xl mt-1 leading-none">{formatINR(trek.price)} <span className="text-ink/50 text-base font-sans">/ person</span></div>
+                  {trek.offerPrice != null && trek.offerPrice < trek.price ? (
+                    <div className="mt-1 leading-none flex items-baseline gap-3 flex-wrap">
+                      <span className="serif text-3xl lg:text-4xl text-ember">{formatINR(trek.offerPrice)}</span>
+                      <span className="serif text-xl text-ink/40 line-through">{formatINR(trek.price)}</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-widest bg-ember text-cream font-sans animate-pulse">
+                        Save {Math.round((1 - trek.offerPrice / trek.price) * 100)}%
+                      </span>
+                      <span className="text-ink/50 text-base font-sans">/ person</span>
+                    </div>
+                  ) : (
+                    <div className="serif text-3xl lg:text-4xl mt-1 leading-none">{formatINR(trek.price)} <span className="text-ink/50 text-base font-sans">/ person</span></div>
+                  )}
                 </div>
               </div>
               <div className="text-xs text-ink/60 max-w-xs">
@@ -958,6 +1075,19 @@ function TrekModal({ trek, onClose }) {
             </div>
           </div>
 
+          {Array.isArray(trek.gallery) && trek.gallery.filter(Boolean).length > 1 && (
+            <TrekGalleryStrip images={trek.gallery.filter(Boolean)} />
+          )}
+          {trek.included && <IncludedRow items={trek.included} />}
+          {trek.pickupPoints && <PickupPoints points={trek.pickupPoints} />}
+          {trek.thingsToCarry && <ThingsToCarry items={trek.thingsToCarry} />}
+          {trek.knowBeforeYouGo && <KnowBefore items={trek.knowBeforeYouGo} />}
+          {trek.faqs && <FaqList faqs={trek.faqs} />}
+          {trek.policies && <Policies data={trek.policies} />}
+
+          <NearbyExplore trekId={trek.id} />
+          <TrekGuidelines />
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1001,6 +1131,189 @@ function Stat({ icon: Icon, label, value }) {
         <span className="eyebrow">{label}</span>
       </div>
       <div className="mt-2 serif text-lg lg:text-xl text-ink leading-tight">{value}</div>
+    </div>
+  );
+}
+
+function TrekGalleryStrip({ images }) {
+  return (
+    <section className="mt-12 pt-10 border-t border-ink/10">
+      <span className="eyebrow text-muted">From the Trail</span>
+      <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {images.slice(0, 5).map((src, i) => (
+          <motion.figure
+            key={src + i}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 * i, duration: 0.6, ease: [0.7, 0, 0.2, 1] }}
+            className="image-hover relative overflow-hidden rounded-xl aspect-[4/5] bg-ink/5"
+          >
+            <DriveImage
+              src={src}
+              alt=""
+              width={800}
+              sizes="(max-width: 640px) 50vw, 20vw"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          </motion.figure>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function IncludedRow({ items }) {
+  return (
+    <section className="mt-12 pt-10 border-t border-ink/10">
+      <span className="eyebrow text-muted">What's Included</span>
+      <ul className="mt-5 flex flex-wrap gap-2">
+        {items.map((it) => (
+          <li
+            key={it}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-ember/10 border border-ember/25 text-ink text-sm"
+          >
+            <Check size={13} strokeWidth={2.4} className="text-ember" /> {it}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function PickupPoints({ points }) {
+  return (
+    <section className="mt-12 pt-10 border-t border-ink/10">
+      <span className="eyebrow text-muted">Friday-Night Pickup Points</span>
+      <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {points.map((p) => (
+          <div
+            key={p.name + p.time}
+            className="flex items-center gap-4 rounded-2xl border border-ink/10 bg-mist/60 px-4 py-3"
+          >
+            <div className="h-9 w-9 rounded-full bg-ember/15 text-ember grid place-items-center flex-shrink-0">
+              <MapPin size={15} strokeWidth={1.8} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sm text-ink">{p.name}</div>
+              <div className="text-xs text-ink/65">{p.detail}</div>
+            </div>
+            <div className="text-xs font-medium text-ember whitespace-nowrap">{p.time}</div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-xs text-ink/55">
+        Final confirmed pickup time is shared on WhatsApp 4–6 hours before departure.
+      </p>
+    </section>
+  );
+}
+
+function ThingsToCarry({ items }) {
+  return (
+    <section className="mt-12 pt-10 border-t border-ink/10">
+      <span className="eyebrow text-muted">Things To Carry</span>
+      <ul className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+        {items.map((it) => (
+          <li
+            key={it}
+            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-ink/[0.03] border border-ink/10 text-[13.5px] text-ink/85"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-ember flex-shrink-0" /> {it}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function KnowBefore({ items }) {
+  return (
+    <section className="mt-12 pt-10 border-t border-ink/10">
+      <details className="group">
+        <summary className="flex items-center justify-between cursor-pointer list-none">
+          <span className="eyebrow text-muted">Know Before You Go</span>
+          <span className="text-xs text-ember group-open:rotate-180 transition-transform">▾</span>
+        </summary>
+        <ul className="mt-5 space-y-3">
+          {items.map((it, i) => (
+            <li key={i} className="flex gap-3 text-[14.5px] text-ink/80 leading-relaxed">
+              <span className="mt-2 h-1 w-1 rounded-full bg-ink/40 flex-shrink-0" />
+              <span>{it}</span>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </section>
+  );
+}
+
+function FaqList({ faqs }) {
+  const [openIdx, setOpenIdx] = useState(0);
+  return (
+    <section className="mt-12 pt-10 border-t border-ink/10">
+      <span className="eyebrow text-muted">Frequently Asked</span>
+      <div className="mt-5 space-y-3">
+        {faqs.map((f, i) => {
+          const isOpen = openIdx === i;
+          return (
+            <div
+              key={f.q}
+              className={`rounded-2xl border transition-colors duration-300 ${
+                isOpen ? 'border-ember/30 bg-ember/5' : 'border-ink/10 bg-mist/40 hover:border-ink/20'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setOpenIdx(isOpen ? -1 : i)}
+                aria-expanded={isOpen}
+                className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+              >
+                <span className="serif text-lg text-ink leading-snug">{f.q}</span>
+                <span className={`text-ember text-xl flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-45' : ''}`}>+</span>
+              </button>
+              {isOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="px-5 pb-5 text-[14.5px] text-ink/80 leading-relaxed"
+                >
+                  {f.a}
+                </motion.div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function Policies({ data }) {
+  return (
+    <section className="mt-12 pt-10 border-t border-ink/10">
+      <span className="eyebrow text-muted">Booking Policies</span>
+      <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <PolicyCard title="Confirmation" items={data.confirmation} />
+        <PolicyCard title="Cancellation" items={data.cancellation} tone="ember" />
+      </div>
+    </section>
+  );
+}
+
+function PolicyCard({ title, items, tone }) {
+  const accent = tone === 'ember' ? 'text-ember' : 'text-ink';
+  return (
+    <div className="rounded-2xl border border-ink/10 bg-mist/40 p-5 lg:p-6">
+      <h4 className={`serif text-xl mb-4 ${accent}`}>{title} Policy</h4>
+      <ul className="space-y-2.5">
+        {items.map((it, i) => (
+          <li key={i} className="flex gap-3 text-[13.5px] text-ink/80 leading-relaxed">
+            <span className="mt-2 h-1 w-1 rounded-full bg-ink/40 flex-shrink-0" />
+            <span>{it}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

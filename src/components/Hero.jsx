@@ -205,7 +205,7 @@ function Reveal({ children, delay = 0 }) {
 }
 
 function Particles() {
-  const dots = Array.from({ length: 22 });
+  const dots = Array.from({ length: 14 });
   return (
     <div className="absolute inset-0 z-[5] pointer-events-none overflow-hidden" aria-hidden>
       {dots.map((_, i) => {
