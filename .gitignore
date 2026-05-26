@@ -11,7 +11,9 @@ dist-ssr
 !.vscode/extensions.json
 
 # Raw source media (kept locally only — selected assets are copied into public/images)
-IMAGES/
+# Leading slash + uppercase pattern to avoid matching public/images/ on
+# case-insensitive filesystems like Windows.
+/IMAGES/
 
 # Build artifacts
 *.tsbuildinfo
