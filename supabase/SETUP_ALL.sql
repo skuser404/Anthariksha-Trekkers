@@ -792,20 +792,15 @@ end $$;
 -- DONE. Final manual steps:
 --
 -- 1. Supabase Dashboard → Authentication → Users → Add user →
---    "Create new user". Enter your admin email + a strong password
---    and tick "Auto Confirm User".
+--    "Create new user". Email: gsunilkumar6018@gmail.com
+--    Enter a strong password (never write it in this file) and
+--    tick "Auto Confirm User".
 --
--- 2. Then promote that user to admin (replace the email):
---
---    update public.profiles set role = 'admin'
---    where email = 'you@example.com';
---
---    If the profile row doesn't exist yet (user never signed in),
---    create it directly:
+-- 2. Then promote that user to admin — run this as-is:
 --
 --    insert into public.profiles (id, email, role)
 --    select id, email, 'admin' from auth.users
---    where email = 'you@example.com'
+--    where email = 'gsunilkumar6018@gmail.com'
 --    on conflict (id) do update set role = 'admin';
 --
 -- 3. Project Settings → API → copy the Project URL and anon/publishable
