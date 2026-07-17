@@ -16,6 +16,8 @@ export default function AdminRouter() {
   const [aal, setAal] = useState(null); // { currentLevel, nextLevel }
   const [verifiedFactor, setVerifiedFactor] = useState(null);
   const [backendDown, setBackendDown] = useState(false);
+  const [adminErr, setAdminErr] = useState(null);
+  const [rechecking, setRechecking] = useState(false);
 
   // === backend reachability probe ===
   // A deleted/paused Supabase project fails DNS — every auth call then
@@ -82,16 +84,64 @@ export default function AdminRouter() {
   }, []);
 
   async function refreshAdmin(userId) {
+    // Attempt 1: normal client query, but never let it hang (a stuck
+    // supabase-js auth lock would otherwise freeze bootstrap forever).
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .maybeSingle();
-      setIsAdmin(!error && data?.role === 'admin');
+      const q = supabase.from('profiles').select('role').eq('id', userId).maybeSingle();
+      const { data, error } = await Promise.race([
+        q,
+        new Promise((_, rej) => setTimeout(() => rej(new Error('role query timed out')), 5000))
+      ]);
+      if (error) throw error;
+      if (data) {
+        setIsAdmin(data.role === 'admin');
+        setAdminErr(data.role === 'admin' ? null : `profile role is '${data.role}'`);
+        return;
+      }
+      throw new Error('no profile row visible');
     } catch (e) {
-      console.warn('[admin] refreshAdmin failed', e);
+      console.warn('[admin] role query failed, trying raw fetch:', e?.message || e);
+    }
+
+    // Attempt 2: raw REST call — bypasses the supabase-js client entirely.
+    // Token is read straight from storage so a wedged client can't block us.
+    try {
+      let token = null;
+      try {
+        const raw = JSON.parse(localStorage.getItem('anth-auth') || 'null');
+        token = raw?.access_token || raw?.currentSession?.access_token || null;
+      } catch {}
+      if (!token) throw new Error('no stored session token');
+
+      const ctrl = new AbortController();
+      const kill = setTimeout(() => ctrl.abort(), 6000);
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?select=role&id=eq.${userId}`,
+        {
+          headers: {
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${token}`
+          },
+          signal: ctrl.signal
+        }
+      );
+      clearTimeout(kill);
+      const rows = await res.json().catch(() => null);
+      if (res.ok && Array.isArray(rows) && rows[0]) {
+        setIsAdmin(rows[0].role === 'admin');
+        setAdminErr(rows[0].role === 'admin' ? null : `profile role is '${rows[0].role}'`);
+        return;
+      }
       setIsAdmin(false);
+      setAdminErr(`role check HTTP ${res.status} — ${JSON.stringify(rows).slice(0, 180)}`);
+    } catch (e) {
+      console.warn('[admin] raw role fetch failed', e);
+      setIsAdmin(false);
+      setAdminErr(
+        e?.name === 'AbortError'
+          ? 'role check timed out — network to Supabase may be blocked in this browser'
+          : String(e?.message || e)
+      );
     }
   }
 
@@ -159,8 +209,24 @@ export default function AdminRouter() {
   if (!isAdmin) {
     return (
       <SetupGate>
-        Signed in, but this account doesn't have admin role. In Supabase SQL Editor run:<br />
-        <code>update public.profiles set role = 'admin' where id = '{session.user.id}';</code>
+        Signed in, but the admin role check didn't pass for this account.
+        {adminErr && (
+          <div className="mt-4 text-xs text-ember/90 break-words">
+            Reason: {adminErr}
+          </div>
+        )}
+        <div className="mt-3 text-xs text-cream/50">
+          If the role was just granted in Supabase, hit Re-check. If this keeps failing with a
+          network/timeout reason, disable Brave Shields / ad-blockers for this site and retry.
+        </div>
+        <button
+          onClick={async () => {
+            setRechecking(true);
+            try { await refreshAdmin(session.user.id); } finally { setRechecking(false); }
+          }}
+          disabled={rechecking}
+          className="mt-6 mr-3 px-4 py-2 rounded-full bg-ember text-cream text-sm disabled:opacity-50"
+        >{rechecking ? 'Checking…' : 'Re-check role'}</button>
         <button
           onClick={async () => {
             try { await supabase.auth.signOut({ scope: 'local' }); } catch {}
