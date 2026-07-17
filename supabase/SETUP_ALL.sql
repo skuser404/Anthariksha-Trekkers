@@ -527,39 +527,47 @@ create policy trek_guidelines_admin_write on public.trek_guidelines
 -- ============================================================
 -- STORAGE BUCKETS — images only; public read, admin write
 -- ============================================================
-insert into storage.buckets (id, name, public)
-values
-  ('trek-images',    'trek-images',    true),
-  ('gallery-images', 'gallery-images', true),
-  ('hero-images',    'hero-images',    true)
-on conflict (id) do nothing;
+-- Wrapped so a permissions error on storage never aborts the whole
+-- script (some projects restrict SQL-editor access to storage.objects —
+-- in that case create the buckets/policies from the Storage UI instead).
+do $$
+begin
+  insert into storage.buckets (id, name, public)
+  values
+    ('trek-images',    'trek-images',    true),
+    ('gallery-images', 'gallery-images', true),
+    ('hero-images',    'hero-images',    true)
+  on conflict (id) do nothing;
 
-drop policy if exists "Public images read" on storage.objects;
-create policy "Public images read" on storage.objects
-  for select using (
-    bucket_id in ('trek-images', 'gallery-images', 'hero-images')
-  );
+  execute 'drop policy if exists "Public images read" on storage.objects';
+  execute $p$create policy "Public images read" on storage.objects
+    for select using (
+      bucket_id in ('trek-images', 'gallery-images', 'hero-images')
+    )$p$;
 
-drop policy if exists "Admin images write" on storage.objects;
-create policy "Admin images write" on storage.objects
-  for insert with check (
-    bucket_id in ('trek-images', 'gallery-images', 'hero-images')
-    and public.is_admin()
-  );
+  execute 'drop policy if exists "Admin images write" on storage.objects';
+  execute $p$create policy "Admin images write" on storage.objects
+    for insert with check (
+      bucket_id in ('trek-images', 'gallery-images', 'hero-images')
+      and public.is_admin()
+    )$p$;
 
-drop policy if exists "Admin images update" on storage.objects;
-create policy "Admin images update" on storage.objects
-  for update using (
-    bucket_id in ('trek-images', 'gallery-images', 'hero-images')
-    and public.is_admin()
-  );
+  execute 'drop policy if exists "Admin images update" on storage.objects';
+  execute $p$create policy "Admin images update" on storage.objects
+    for update using (
+      bucket_id in ('trek-images', 'gallery-images', 'hero-images')
+      and public.is_admin()
+    )$p$;
 
-drop policy if exists "Admin images delete" on storage.objects;
-create policy "Admin images delete" on storage.objects
-  for delete using (
-    bucket_id in ('trek-images', 'gallery-images', 'hero-images')
-    and public.is_admin()
-  );
+  execute 'drop policy if exists "Admin images delete" on storage.objects';
+  execute $p$create policy "Admin images delete" on storage.objects
+    for delete using (
+      bucket_id in ('trek-images', 'gallery-images', 'hero-images')
+      and public.is_admin()
+    )$p$;
+exception when insufficient_privilege then
+  raise notice 'Skipped storage buckets/policies (no permission from SQL editor) — configure them in Storage UI.';
+end $$;
 
 -- ============================================================
 -- SEED — 28 treks (idempotent; updates metadata on re-run)
