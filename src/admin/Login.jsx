@@ -44,6 +44,16 @@ export default function AdminLogin() {
     setBusy(false);
 
     if (error) {
+      // Network / unreachable-backend failures aren't wrong passwords —
+      // show a clear message and don't count them toward the lockout.
+      const netFail =
+        error.name === 'AuthRetryableFetchError' ||
+        error.status === 0 ||
+        /fetch|network/i.test(error.message || '');
+      if (netFail) {
+        setErr('Cannot reach the server. Check your connection — or the Supabase project may be paused/deleted.');
+        return;
+      }
       const attempts = (store.attempts || 0) + 1;
       const next = { attempts };
       if (attempts >= MAX_ATTEMPTS) {

@@ -21,9 +21,15 @@ export const TREK_PRICES = {
   kurinjal: 3899,
   'ballalarayana-durga': 4299,
 
+  'baba-budangiri': 3499,
+  'kemmangundi-z-point': 3299,
+  'deviramma-betta': 3399,
+  kyatanamakki: 3299,
+
   'chikmagalur-backpacking': 6499,
   coorg: 6999,
-  wayanad: 7299
+  wayanad: 7299,
+  manali: 18999
 };
 
 export const formatINR = (n) => {

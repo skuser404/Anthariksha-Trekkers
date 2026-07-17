@@ -15,6 +15,19 @@ export default function AdminRouter() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [aal, setAal] = useState(null); // { currentLevel, nextLevel }
   const [verifiedFactor, setVerifiedFactor] = useState(null);
+  const [backendDown, setBackendDown] = useState(false);
+
+  // === backend reachability probe ===
+  // A deleted/paused Supabase project fails DNS — every auth call then
+  // dies with a cryptic "Failed to fetch". Detect it up front instead.
+  useEffect(() => {
+    if (!supabaseEnabled) return;
+    let cancelled = false;
+    fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/health`, { method: 'GET' })
+      .then(() => { if (!cancelled) setBackendDown(false); })
+      .catch(() => { if (!cancelled) setBackendDown(true); });
+    return () => { cancelled = true; };
+  }, []);
 
   // === auth bootstrap ===
   useEffect(() => {
@@ -118,6 +131,21 @@ export default function AdminRouter() {
       <SetupGate>
         Supabase isn't configured yet. Create a project, run <code>supabase/schema.sql</code>, then set
         <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> in <code>.env</code>.
+      </SetupGate>
+    );
+  }
+
+  if (backendDown) {
+    return (
+      <SetupGate>
+        The backend can't be reached — the Supabase project behind this site appears to be
+        paused or deleted. Restore it from the Supabase dashboard (or create a new project and
+        run <code>supabase/SETUP_ALL.sql</code>), update <code>VITE_SUPABASE_URL</code> /
+        <code>VITE_SUPABASE_ANON_KEY</code>, and redeploy.
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-6 mx-auto block px-4 py-2 rounded-full bg-white text-ink text-sm"
+        >Retry</button>
       </SetupGate>
     );
   }

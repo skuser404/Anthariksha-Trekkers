@@ -476,6 +476,102 @@ const treks = [
     ]
   },
   {
+    id: 'baba-budangiri',
+    name: 'Baba Budangiri Trek',
+    region: 'Chikmagalur · Karnataka',
+    image: IMG.misty,
+    duration: '1 Day',
+    difficulty: 'Easy-Moderate',
+    altitude: '1,895 m',
+    distance: '9 km',
+    bestSeason: 'Sept–Mar',
+    fromBangalore: '270 km',
+    tag: "The saint's peak — cave shrine, cliffs, and the Galikere meadow.",
+    highlights: [
+      'Dattatreya Peetha — the centuries-old cave shrine at the summit',
+      'Galikere lake meadow tucked between the ridgelines',
+      'Manikyadhara Falls stop on the descent',
+      'Ridge views across to Mullayanagiri — Karnataka\'s highest peak',
+      'Doable as a single-day Bangalore weekend'
+    ],
+    itinerary: [
+      { day: 'Friday Night', title: 'Departure', items: ['10:30 PM pickup from Bangalore'] },
+      { day: 'Saturday', title: 'Summit & Return', items: ['5:30 AM reach Chikmagalur, breakfast', 'Drive up the Baba Budangiri ghat road', 'Trek begins 8 AM along the ridge', 'Dattatreya Peetha cave shrine visit', 'Galikere lake meadow + packed lunch', 'After having lunch, descent via Manikyadhara Falls', 'Evening coffee in Chikmagalur town', 'Depart 6 PM, reach Bangalore by midnight'] }
+    ]
+  },
+  {
+    id: 'kemmangundi-z-point',
+    name: 'Kemmangundi Z-Point Trek',
+    region: 'Kemmangundi · Chikmagalur',
+    image: IMG.sky,
+    duration: '1 Day',
+    difficulty: 'Easy',
+    altitude: '1,750 m',
+    distance: '6 km',
+    bestSeason: 'Sept–Mar',
+    fromBangalore: '270 km',
+    tag: 'A cliff-edge sunrise above the Bhadra valley.',
+    highlights: [
+      'Z-Point — the cliff-edge viewpoint above the Bhadra forests',
+      'Shanti Falls en route to the top',
+      'Hebbe Falls jeep ride through coffee estates',
+      'Raj Bhavan rose garden viewpoint at Kemmangundi',
+      'Kalhatti Falls temple stop on the return'
+    ],
+    itinerary: [
+      { day: 'Friday Night', title: 'Departure', items: ['10:30 PM pickup from Bangalore'] },
+      { day: 'Saturday', title: 'Z-Point & Falls', items: ['6 AM reach Kemmangundi hill station', 'Sunrise trek to Z-Point via Shanti Falls', 'Breakfast back at Kemmangundi', 'Jeep ride to Hebbe Falls, swim break', 'Lunch at a coffee estate', 'After having lunch, Kalhatti Falls stop', 'Depart 5 PM, reach Bangalore by midnight'] }
+    ]
+  },
+  {
+    id: 'deviramma-betta',
+    name: 'Deviramma Betta Trek',
+    region: 'Chikmagalur · Karnataka',
+    image: IMG.green,
+    duration: '1 Day',
+    difficulty: 'Moderate',
+    altitude: '1,200 m',
+    distance: '8 km',
+    bestSeason: 'Oct–Mar',
+    fromBangalore: '260 km',
+    tag: 'The bare-rock pilgrim climb opposite Mullayanagiri.',
+    highlights: [
+      'Devirammana temple at the bare rocky summit',
+      'Open grassland-and-rock climb — no forest cover, all views',
+      'Face-on panorama of the Mullayanagiri–Baba Budangiri range',
+      'Quiet trail — far fewer trekkers than the neighbouring peaks',
+      'Combines with Kalhatti Falls on the return'
+    ],
+    itinerary: [
+      { day: 'Friday Night', title: 'Departure', items: ['10:30 PM pickup from Bangalore'] },
+      { day: 'Saturday', title: 'Summit & Return', items: ['6 AM reach the base village, breakfast', 'Trek begins 7:30 AM up the open rock face', 'Devirammana temple darshan at the summit', 'Packed lunch with the Mullayanagiri panorama', 'After having lunch, descent starts', 'Kalhatti Falls stop', 'Depart 5 PM, reach Bangalore by midnight'] }
+    ]
+  },
+  {
+    id: 'kyatanamakki',
+    name: 'Kyatanamakki Hill Trek',
+    region: 'Kalasa · Chikmagalur',
+    image: IMG.sunrise,
+    duration: '1 Day',
+    difficulty: 'Easy',
+    altitude: '1,400 m',
+    distance: '5 km',
+    bestSeason: 'Sept–Feb',
+    fromBangalore: '300 km',
+    tag: "Sea of clouds at sunrise — Chikmagalur's wildest viewpoint.",
+    highlights: [
+      '360° sunrise over a sea of clouds',
+      'Off-road jeep climb up the final stretch',
+      'Unbroken Western Ghats panorama toward Kudremukh',
+      'One of the least crowded viewpoints in Chikmagalur',
+      'Horanadu Annapoorneshwari temple stop nearby'
+    ],
+    itinerary: [
+      { day: 'Friday Night', title: 'Departure', items: ['10 PM pickup from Bangalore'] },
+      { day: 'Saturday', title: 'Sunrise & Return', items: ['4:30 AM reach the jeep point', 'Off-road jeep + short trek to the summit', 'Sunrise above the cloud line', 'Breakfast at a Kalasa homestay', 'Horanadu temple visit', 'Lunch at Kalasa', 'After having lunch, return drive begins', 'Reach Bangalore by 11 PM'] }
+    ]
+  },
+  {
     id: 'chikmagalur-backpacking',
     name: 'Chikmagalur Backpacking',
     region: 'Chikmagalur · Karnataka',
@@ -551,6 +647,34 @@ const treks = [
       { day: 'Day 1 · Friday', title: 'Chembra Peak', items: ['7 AM reach Kalpetta', 'Breakfast + tea estate homestay check-in', 'Chembra Peak trek to the Heart-Shaped Lake (~1.5 hr)', 'After lunch, descent + estate tea tasting', 'Evening at Pookode Lake'] },
       { day: 'Day 2 · Saturday', title: 'Caves & Forest', items: ['Edakkal Caves morning visit', 'Lunch in Sulthan Bathery', 'Banasura Sagar Dam', 'Soochipara Falls', 'Bonfire + Kerala dinner'] },
       { day: 'Day 3 · Sunday', title: 'Return', items: ['Tea estate walk', 'Brunch', 'Optional Thirunelli temple stop', 'Depart 1 PM, reach Bangalore by 10 PM'] }
+    ]
+  },
+  {
+    id: 'manali',
+    name: 'Manali Adventure Expedition',
+    region: 'Kullu–Manali · Himachal Pradesh',
+    image: IMG.sky,
+    duration: '6 Days',
+    difficulty: 'Easy-Moderate',
+    altitude: '4,000 m',
+    distance: 'Multi-stop',
+    bestSeason: 'May–Oct',
+    fromBangalore: 'Fly to Delhi · Volvo to Manali',
+    tag: 'Snow passes, Old Manali cafes, and the Atal Tunnel to Sissu.',
+    highlights: [
+      'Jogini Falls + Hampta valley day trek above Vashisht',
+      'Solang Valley — paragliding, zorbing, ropeway adventure sports',
+      'Atal Tunnel drive to Sissu in Lahaul — snow even in summer',
+      'Hadimba Devi temple, Old Manali cafes, and the Mall Road evening',
+      'Optional Kasol + Manikaran hot springs extension'
+    ],
+    itinerary: [
+      { day: 'Day 0', title: 'Departure', items: ['Fly Bangalore → Delhi', 'Overnight Volvo from Delhi to Manali'] },
+      { day: 'Day 1', title: 'Arrive Manali', items: ['Reach Manali by noon, check-in', 'Hadimba Devi temple + Van Vihar walk', 'Old Manali cafes + Mall Road evening'] },
+      { day: 'Day 2', title: 'Jogini Falls Trek', items: ['Vashisht hot springs morning', 'Trek to Jogini Falls through apple orchards', 'Packed lunch at the falls', 'After having lunch, descent + riverside evening'] },
+      { day: 'Day 3', title: 'Solang Valley', items: ['Full adventure day at Solang', 'Paragliding / ropeway / zorbing (on-site pricing)', 'Bonfire + music night at the stay'] },
+      { day: 'Day 4', title: 'Atal Tunnel · Sissu', items: ['Drive through the 9-km Atal Tunnel', 'Sissu waterfall + Chandra river valley in Lahaul', 'Snow point stop', 'Return to Manali by evening'] },
+      { day: 'Day 5', title: 'Return', items: ['Slow breakfast + local shopping', 'Afternoon Volvo to Delhi', 'Fly back to Bangalore next morning'] }
     ]
   }
 ];
