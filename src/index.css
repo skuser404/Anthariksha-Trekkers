@@ -18,21 +18,24 @@ html, body {
   overflow-x: hidden;
 }
 
-body {
+/* Native cursor hidden ONLY where the custom cursor is rendered
+   (public site). Admin panel keeps the normal cursor. */
+body.use-custom-cursor {
+  cursor: none;
+}
+
+body.use-custom-cursor a,
+body.use-custom-cursor button,
+body.use-custom-cursor [role="button"] {
   cursor: none;
 }
 
 @media (max-width: 1024px) {
-  body { cursor: auto; }
+  body.use-custom-cursor { cursor: auto; }
+  body.use-custom-cursor a,
+  body.use-custom-cursor button,
+  body.use-custom-cursor [role="button"] { cursor: pointer; }
   .cursor-dot, .cursor-ring { display: none !important; }
-}
-
-a, button, [role="button"] {
-  cursor: none;
-}
-
-@media (max-width: 1024px) {
-  a, button, [role="button"] { cursor: pointer; }
 }
 
 ::selection {

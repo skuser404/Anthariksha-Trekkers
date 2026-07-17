@@ -21,6 +21,9 @@ export const TREK_PRICES = {
   kurinjal: 3899,
   'ballalarayana-durga': 4299,
 
+  gangadikal: 3999,
+  valikunja: 3999,
+  seethabumi: 4199,
   'baba-budangiri': 3499,
   'kemmangundi-z-point': 3299,
   'deviramma-betta': 3399,

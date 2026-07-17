@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Clock, Mountain, TrendingUp, Calendar, Check, ArrowRight, Sun, Navigation, Tag } from 'lucide-react';
 import { TREK_PRICES, useLiveTreks, formatINR } from '../lib/treks.js';
+import { openBooking } from './BookingModal.jsx';
 import { toDriveImageURL } from '../lib/drive.js';
 import DriveImage from './DriveImage.jsx';
 import TrekSlideshow from './TrekSlideshow.jsx';
@@ -476,6 +477,78 @@ const treks = [
     ]
   },
   {
+    id: 'gangadikal',
+    name: 'Gangadikal Peak Trek',
+    region: 'Kudremukh NP · Karnataka',
+    image: IMG.green,
+    duration: '1 Day',
+    difficulty: 'Moderate',
+    altitude: '1,690 m',
+    distance: '10 km',
+    bestSeason: 'Oct–May',
+    fromBangalore: '330 km',
+    tag: 'The newest permit trail in Kudremukh — face-on views of the horse-face peak.',
+    highlights: [
+      'One of the recently opened Forest Department permit trails',
+      'Face-on panorama of the Kudremukh "horse-face" ridgeline',
+      'Shola forest and grassland climb from the Kalasa side',
+      'Forest-guide-led batch (permits + guide arranged by us)',
+      'Far quieter than the main Kudremukh trail'
+    ],
+    itinerary: [
+      { day: 'Day 0 · Friday', title: 'Departure', items: ['9:30 PM pickup from Bangalore', 'Overnight drive toward Kalasa'] },
+      { day: 'Day 1 · Saturday', title: 'Summit & Return', items: ['6 AM reach the base, breakfast', 'Forest check-post permits + guide briefing', 'Trek begins 8 AM through shola and grassland', 'Gangadikal summit — Kudremukh range panorama', 'Packed lunch on top', 'After having lunch, descent starts', 'Evening coffee at Kalasa', 'Depart 6 PM, reach Bangalore overnight'] }
+    ]
+  },
+  {
+    id: 'valikunja',
+    name: 'Valikunja Trek',
+    region: 'Kudremukh NP · Karnataka',
+    image: IMG.misty,
+    duration: '1 Day',
+    difficulty: 'Moderate',
+    altitude: '1,300 m',
+    distance: '14 km',
+    bestSeason: 'Oct–May',
+    fromBangalore: '350 km',
+    tag: 'The lesser-walked permit ridge inside the national park.',
+    highlights: [
+      'Official Forest Department permit trail — small batches only',
+      'Dense evergreen forest opening onto a grassland ridge',
+      'High chance of gaur, giant squirrel, and hornbill sightings',
+      'Streams and shola crossings on the Karkala side of the park',
+      'Forest guide with every batch'
+    ],
+    itinerary: [
+      { day: 'Day 0 · Friday', title: 'Departure', items: ['9:30 PM pickup from Bangalore', 'Overnight drive toward Karkala'] },
+      { day: 'Day 1 · Saturday', title: 'Ridge & Return', items: ['6 AM reach the forest office, breakfast', 'Permits + guide allocation', 'Trek begins 8 AM through evergreen forest', 'Valikunja ridge viewpoint, packed lunch', 'After having lunch, loop descent begins', 'Reach base by 4:30 PM', 'Depart 6 PM, reach Bangalore overnight'] }
+    ]
+  },
+  {
+    id: 'seethabumi',
+    name: 'Seethabumi Peak Trek',
+    region: 'Kudremukh NP · Karnataka',
+    image: IMG.cliff,
+    duration: '1 Day',
+    difficulty: 'Moderate',
+    altitude: '1,450 m',
+    distance: '12 km',
+    bestSeason: 'Oct–May',
+    fromBangalore: '340 km',
+    tag: 'Grassland summit on the quiet side of the Kudremukh range.',
+    highlights: [
+      'Forest Department permit trail near Kalasa',
+      'Rolling grassland ridgelines with valley views on both sides',
+      'Mythology-rich peak — named for Sita of the Ramayana',
+      'Combines beautifully with Horanadu temple on the return',
+      'Small guided batches only'
+    ],
+    itinerary: [
+      { day: 'Day 0 · Friday', title: 'Departure', items: ['9:30 PM pickup from Bangalore', 'Overnight drive toward Kalasa'] },
+      { day: 'Day 1 · Saturday', title: 'Summit & Return', items: ['6 AM reach the base village, breakfast', 'Forest permits + guide briefing', 'Trek begins 8 AM up the grassland ridge', 'Seethabumi summit, packed lunch', 'After having lunch, descent starts', 'Horanadu Annapoorneshwari temple stop', 'Depart 6 PM, reach Bangalore overnight'] }
+    ]
+  },
+  {
     id: 'baba-budangiri',
     name: 'Baba Budangiri Trek',
     region: 'Chikmagalur · Karnataka',
@@ -679,17 +752,26 @@ const treks = [
   }
 ];
 
-const FEATURED_IDS = ['kudremukh', 'netravati', 'bandaje', 'kumara-parvatha', 'kurinjal'];
+// Priority treks — shown first everywhere (featured grid + View More list).
+const PRIORITY_IDS = ['kudremukh', 'netravati', 'bandaje', 'kurinjal', 'gangadikal', 'kodachadri'];
+const FEATURED_IDS = PRIORITY_IDS;
+
+const priorityRank = (id) => {
+  const i = PRIORITY_IDS.indexOf(id);
+  return i === -1 ? PRIORITY_IDS.length : i;
+};
 
 export default function FeaturedTreks() {
   const [active, setActive] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const { treks: liveTreks } = useLiveTreks(treks);
 
-  const merged = liveTreks.map((t) => ({
-    ...t,
-    price: t.price ?? TREK_PRICES[t.id] ?? null
-  }));
+  const merged = liveTreks
+    .map((t) => ({
+      ...t,
+      price: t.price ?? TREK_PRICES[t.id] ?? null
+    }))
+    .sort((a, b) => priorityRank(a.id) - priorityRank(b.id));
 
   const featured = FEATURED_IDS
     .map((id) => merged.find((t) => t.id === id))
@@ -1223,16 +1305,17 @@ function TrekModal({ trek, onClose }) {
               <div className="serif text-2xl mt-1">Reserve your slot →</div>
             </div>
             <div className="flex flex-wrap gap-3">
-              <a
-                href={`https://wa.me/919902704361?text=${encodeURIComponent(
-                  `Hey Anthariksha, I want to book the ${trek.name} trek.\n\nDuration: ${trek.duration}\nDifficulty: ${trek.difficulty}\nAltitude: ${trek.altitude}\nBest season: ${trek.bestSeason}${trek.price != null ? `\nPrice: ${formatINR(trek.price)} / person` : ''}\n\nDate: \nPeople: \nPickup location: \nName: \nContact: `
-                )}`}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={() => openBooking({
+                  id: trek.id,
+                  name: trek.name,
+                  price: (trek.offerPrice != null && trek.offerPrice < trek.price) ? trek.offerPrice : trek.price
+                })}
                 className="btn-pill btn-solid"
               >
-                Book on WhatsApp <span className="arrow">→</span>
-              </a>
+                Book Now <span className="arrow">→</span>
+              </button>
               <a
                 href="tel:+919902704361"
                 className="btn-pill border-ink text-ink"

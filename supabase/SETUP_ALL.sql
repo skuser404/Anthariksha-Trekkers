@@ -262,7 +262,7 @@ create table if not exists public.homepage_settings (
   hero_subline text,
   hero_image text,
   hero_video text,
-  featured_trek_ids text[] default array['kudremukh','netravati','bandaje','kumara-parvatha','kurinjal'],
+  featured_trek_ids text[] default array['kudremukh','netravati','bandaje','kurinjal','gangadikal','kodachadri'],
   rotating_tags text[] default array[
     'Kudremukh Expedition',
     'Kumara Parvatha Challenge',
@@ -562,34 +562,39 @@ create policy "Admin images delete" on storage.objects
   );
 
 -- ============================================================
--- SEED — 25 treks (idempotent; updates metadata on re-run)
+-- SEED — 28 treks (idempotent; updates metadata on re-run)
+-- Priority order: Kudremukh → Netravati → Bandaje → Kurinjal →
+-- Gangadikal → Kodachadri, then the rest.
 -- ============================================================
 insert into public.treks (id, name, region, tag, difficulty, duration, altitude, distance, best_season, from_bangalore, price, is_active, display_order) values
   ('kudremukh',                'Kudremukh Trek',                'Chikmagalur · Karnataka',     'Karnataka''s classic ridgeline. The horse-face peak.',          'Moderate',     '2 Days',      '1,894 m', '22 km',     'Sept–Feb',    '330 km',         4499,  true, 10),
-  ('kodachadri',               'Kodachadri Trek',               'Shimoga · Karnataka',         'Sunset peak of the Sahyadris.',                                 'Moderate',     '2 Days',      '1,343 m', '18 km',     'Oct–Feb',     '410 km',         4799,  true, 20),
-  ('tadiandamol',              'Tadiandamol Trek',              'Coorg · Karnataka',           'Coorg''s highest peak. Second-highest in Karnataka.',           'Moderate',     '1 Day',       '1,748 m', '12 km',     'Oct–Mar',     '265 km',         3699,  true, 30),
-  ('kumara-parvatha',          'Kumara Parvatha Trek',          'Kukke Subramanya · Karnataka','South India''s toughest forest climb.',                         'Tough',        '2 Days',      '1,712 m', '26 km',     'Oct–Feb',     '285 km',         4999,  true, 40),
-  ('netravati',                'Netravati Peak Trek',           'Charmadi · Karnataka',        'Where clouds spill over the cliff.',                            'Difficult',    '2 Days',      '1,513 m', '20 km',     'Aug–Feb',     '320 km',         4499,  true, 50),
-  ('skandagiri',               'Skandagiri Sunrise Trek',       'Chikkaballapur · Karnataka',  'Sunrise above the clouds. 60 km from Bangalore.',               'Easy',         '1 Night',     '1,450 m', '8 km',      'Year-round',  '60 km',          1899,  true, 60),
-  ('kunti-betta',              'Kunti Betta Night Trek',        'Pandavapura · Karnataka',     'Stars, summit, sunrise. One night.',                            'Easy',         '1 Night',     '882 m',   '6 km',      'Year-round',  '125 km',         2199,  true, 70),
-  ('ettina-bhuja',             'Ettina Bhuja Trek',             'Charmadi · Karnataka',        'The bull''s shoulder of the Ghats.',                            'Moderate',     '1 Day',       '1,300 m', '10 km',     'Sept–Feb',    '280 km',         3799,  true, 80),
-  ('mullayanagiri',            'Mullayanagiri Trek',            'Chikmagalur · Karnataka',     'Karnataka''s highest peak. The summit Shiva temple.',           'Easy-Moderate','1 Day',       '1,930 m', '8 km',      'Sept–Mar',    '260 km',         3499,  true, 90),
-  ('narasimha-parvatha',       'Narasimha Parvatha Trek',       'Agumbe · Karnataka',          'Through king cobra country — the Cherrapunji of the South.',    'Moderate',     '2 Days',      '826 m',   '24 km',     'Oct–Feb',     '380 km',         4699,  true, 100),
-  ('gokarna',                  'Gokarna Beach Trek',            'Karwar Coast · Karnataka',    'Five beaches. One coastline. Bare feet.',                       'Easy',         '2 Days',      'Sea Level','14 km',    'Oct–Mar',     '480 km',         4899,  true, 110),
-  ('dudhsagar',                'Dudhsagar Falls Trek',          'Goa-Karnataka border',        'India''s tallest waterfall, up close. (Closed in monsoon.)',    'Moderate',     '1 Day',       '310 m',   '14 km',     'Oct–May',     '560 km',         4299,  true, 120),
-  ('bandaje',                  'Bandaje Falls Trek',            'Charmadi · Karnataka',        'A 200-foot drop into the wild.',                                'Difficult',    '2 Days',      '1,054 m', '24 km',     'Oct–Feb',     '290 km',         4100,  true, 130),
-  ('kurinjal',                 'Kurinjal Peak Trek',            'Kudremukh Range · Karnataka', 'The quieter ridge of Kudremukh.',                               'Moderate',     '1 Day',       '1,573 m', '12 km',     'Sept–Feb',    '335 km',         3899,  true, 140),
-  ('ballalarayana-durga',      'Ballalarayana Durga Trek',      'Charmadi · Karnataka',        'Fort ruins on a ridge of fog.',                                 'Moderate',     '2 Days',      '1,509 m', '22 km',     'Oct–Feb',     '290 km',         4299,  true, 150),
-  ('chikmagalur-backpacking',  'Chikmagalur Backpacking',       'Chikmagalur · Karnataka',     'Coffee estates, two peaks, slow weekend.',                      'Easy',         '3 Days',      '1,200 m', 'Flexible',  'Year-round',  '245 km',         6499,  true, 160),
-  ('coorg',                    'Coorg Adventure Trek',          'Madikeri · Karnataka',        'Coffee, rafting, ridgeline.',                                   'Easy',         '3 Days',      '1,400 m', 'Flexible',  'Oct–May',     '240 km',         6999,  true, 170),
-  ('wayanad',                  'Wayanad Expedition',            'Wayanad · Kerala',            'Chembra Peak. Edakkal Caves. Tea country.',                     'Moderate',     '3 Days',      '2,100 m', 'Flexible',  'Sept–May',    '290 km',         7299,  true, 180),
-  ('meghalaya',                'Meghalaya Adventure Expedition','Shillong · North-East India', 'Living root bridges. Cherrapunji. Dawki.',                      'Moderate',     '7 Days',      'Varies',  'Multi-stop','Oct–May',     'Fly to Guwahati', 28999, true, 190),
-  ('himalayan-basecamp',       'Himalayan Basecamp Expedition', 'Uttarakhand · Himalayas',     'Our flagship Himalayan expedition.',                            'Difficult',    '7-10 Days',   '4,200 m+','60–90 km',  'Apr–Jun · Sept–Oct','Fly to Dehradun', 19999, true, 200),
-  ('baba-budangiri',           'Baba Budangiri Trek',           'Chikmagalur · Karnataka',     'The saint''s peak — cave shrine, cliffs, and the Galikere meadow.', 'Easy-Moderate','1 Day',     '1,895 m', '9 km',      'Sept–Mar',    '270 km',         3499,  true, 210),
-  ('kemmangundi-z-point',      'Kemmangundi Z-Point Trek',      'Kemmangundi · Chikmagalur',   'A cliff-edge sunrise above the Bhadra valley.',                 'Easy',         '1 Day',       '1,750 m', '6 km',      'Sept–Mar',    '270 km',         3299,  true, 220),
-  ('deviramma-betta',          'Deviramma Betta Trek',          'Chikmagalur · Karnataka',     'The bare-rock pilgrim climb opposite Mullayanagiri.',           'Moderate',     '1 Day',       '1,200 m', '8 km',      'Oct–Mar',     '260 km',         3399,  true, 230),
-  ('kyatanamakki',             'Kyatanamakki Hill Trek',        'Kalasa · Chikmagalur',        'Sea of clouds at sunrise — Chikmagalur''s wildest viewpoint.',  'Easy',         '1 Day',       '1,400 m', '5 km',      'Sept–Feb',    '300 km',         3299,  true, 240),
-  ('manali',                   'Manali Adventure Expedition',   'Kullu–Manali · Himachal Pradesh','Snow passes, Old Manali cafes, and the Atal Tunnel to Sissu.','Easy-Moderate','6 Days',     '4,000 m', 'Multi-stop','May–Oct',     'Fly to Delhi · Volvo to Manali', 18999, true, 250)
+  ('netravati',                'Netravati Peak Trek',           'Charmadi · Karnataka',        'Where clouds spill over the cliff.',                            'Difficult',    '2 Days',      '1,513 m', '20 km',     'Aug–Feb',     '320 km',         4499,  true, 20),
+  ('bandaje',                  'Bandaje Falls Trek',            'Charmadi · Karnataka',        'A 200-foot drop into the wild.',                                'Difficult',    '2 Days',      '1,054 m', '24 km',     'Oct–Feb',     '290 km',         4100,  true, 30),
+  ('kurinjal',                 'Kurinjal Peak Trek',            'Kudremukh Range · Karnataka', 'The quieter ridge of Kudremukh.',                               'Moderate',     '1 Day',       '1,573 m', '12 km',     'Sept–Feb',    '335 km',         3899,  true, 40),
+  ('gangadikal',               'Gangadikal Peak Trek',          'Kudremukh NP · Karnataka',    'The newest permit trail in Kudremukh — face-on views of the horse-face peak.', 'Moderate','1 Day','1,690 m','10 km',  'Oct–May',     '330 km',         3999,  true, 50),
+  ('kodachadri',               'Kodachadri Trek',               'Shimoga · Karnataka',         'Sunset peak of the Sahyadris.',                                 'Moderate',     '2 Days',      '1,343 m', '18 km',     'Oct–Feb',     '410 km',         4799,  true, 60),
+  ('kumara-parvatha',          'Kumara Parvatha Trek',          'Kukke Subramanya · Karnataka','South India''s toughest forest climb.',                         'Tough',        '2 Days',      '1,712 m', '26 km',     'Oct–Feb',     '285 km',         4999,  true, 70),
+  ('valikunja',                'Valikunja Trek',                'Kudremukh NP · Karnataka',    'The lesser-walked permit ridge inside the national park.',      'Moderate',     '1 Day',       '1,300 m', '14 km',     'Oct–May',     '350 km',         3999,  true, 80),
+  ('seethabumi',               'Seethabumi Peak Trek',          'Kudremukh NP · Karnataka',    'Grassland summit on the quiet side of the Kudremukh range.',    'Moderate',     '1 Day',       '1,450 m', '12 km',     'Oct–May',     '340 km',         4199,  true, 90),
+  ('tadiandamol',              'Tadiandamol Trek',              'Coorg · Karnataka',           'Coorg''s highest peak. Second-highest in Karnataka.',           'Moderate',     '1 Day',       '1,748 m', '12 km',     'Oct–Mar',     '265 km',         3699,  true, 100),
+  ('skandagiri',               'Skandagiri Sunrise Trek',       'Chikkaballapur · Karnataka',  'Sunrise above the clouds. 60 km from Bangalore.',               'Easy',         '1 Night',     '1,450 m', '8 km',      'Year-round',  '60 km',          1899,  true, 110),
+  ('kunti-betta',              'Kunti Betta Night Trek',        'Pandavapura · Karnataka',     'Stars, summit, sunrise. One night.',                            'Easy',         '1 Night',     '882 m',   '6 km',      'Year-round',  '125 km',         2199,  true, 120),
+  ('ettina-bhuja',             'Ettina Bhuja Trek',             'Charmadi · Karnataka',        'The bull''s shoulder of the Ghats.',                            'Moderate',     '1 Day',       '1,300 m', '10 km',     'Sept–Feb',    '280 km',         3799,  true, 130),
+  ('mullayanagiri',            'Mullayanagiri Trek',            'Chikmagalur · Karnataka',     'Karnataka''s highest peak. The summit Shiva temple.',           'Easy-Moderate','1 Day',       '1,930 m', '8 km',      'Sept–Mar',    '260 km',         3499,  true, 140),
+  ('narasimha-parvatha',       'Narasimha Parvatha Trek',       'Agumbe · Karnataka',          'Through king cobra country — the Cherrapunji of the South.',    'Moderate',     '2 Days',      '826 m',   '24 km',     'Oct–Feb',     '380 km',         4699,  true, 150),
+  ('gokarna',                  'Gokarna Beach Trek',            'Karwar Coast · Karnataka',    'Five beaches. One coastline. Bare feet.',                       'Easy',         '2 Days',      'Sea Level','14 km',    'Oct–Mar',     '480 km',         4899,  true, 160),
+  ('dudhsagar',                'Dudhsagar Falls Trek',          'Goa-Karnataka border',        'India''s tallest waterfall, up close. (Closed in monsoon.)',    'Moderate',     '1 Day',       '310 m',   '14 km',     'Oct–May',     '560 km',         4299,  true, 170),
+  ('ballalarayana-durga',      'Ballalarayana Durga Trek',      'Charmadi · Karnataka',        'Fort ruins on a ridge of fog.',                                 'Moderate',     '2 Days',      '1,509 m', '22 km',     'Oct–Feb',     '290 km',         4299,  true, 180),
+  ('baba-budangiri',           'Baba Budangiri Trek',           'Chikmagalur · Karnataka',     'The saint''s peak — cave shrine, cliffs, and the Galikere meadow.', 'Easy-Moderate','1 Day',     '1,895 m', '9 km',      'Sept–Mar',    '270 km',         3499,  true, 190),
+  ('kemmangundi-z-point',      'Kemmangundi Z-Point Trek',      'Kemmangundi · Chikmagalur',   'A cliff-edge sunrise above the Bhadra valley.',                 'Easy',         '1 Day',       '1,750 m', '6 km',      'Sept–Mar',    '270 km',         3299,  true, 200),
+  ('deviramma-betta',          'Deviramma Betta Trek',          'Chikmagalur · Karnataka',     'The bare-rock pilgrim climb opposite Mullayanagiri.',           'Moderate',     '1 Day',       '1,200 m', '8 km',      'Oct–Mar',     '260 km',         3399,  true, 210),
+  ('kyatanamakki',             'Kyatanamakki Hill Trek',        'Kalasa · Chikmagalur',        'Sea of clouds at sunrise — Chikmagalur''s wildest viewpoint.',  'Easy',         '1 Day',       '1,400 m', '5 km',      'Sept–Feb',    '300 km',         3299,  true, 220),
+  ('chikmagalur-backpacking',  'Chikmagalur Backpacking',       'Chikmagalur · Karnataka',     'Coffee estates, two peaks, slow weekend.',                      'Easy',         '3 Days',      '1,200 m', 'Flexible',  'Year-round',  '245 km',         6499,  true, 230),
+  ('coorg',                    'Coorg Adventure Trek',          'Madikeri · Karnataka',        'Coffee, rafting, ridgeline.',                                   'Easy',         '3 Days',      '1,400 m', 'Flexible',  'Oct–May',     '240 km',         6999,  true, 240),
+  ('wayanad',                  'Wayanad Expedition',            'Wayanad · Kerala',            'Chembra Peak. Edakkal Caves. Tea country.',                     'Moderate',     '3 Days',      '2,100 m', 'Flexible',  'Sept–May',    '290 km',         7299,  true, 250),
+  ('meghalaya',                'Meghalaya Adventure Expedition','Shillong · North-East India', 'Living root bridges. Cherrapunji. Dawki.',                      'Moderate',     '7 Days',      'Varies',  'Multi-stop','Oct–May',     'Fly to Guwahati', 28999, true, 260),
+  ('himalayan-basecamp',       'Himalayan Basecamp Expedition', 'Uttarakhand · Himalayas',     'Our flagship Himalayan expedition.',                            'Difficult',    '7-10 Days',   '4,200 m+','60–90 km',  'Apr–Jun · Sept–Oct','Fly to Dehradun', 19999, true, 270),
+  ('manali',                   'Manali Adventure Expedition',   'Kullu–Manali · Himachal Pradesh','Snow passes, Old Manali cafes, and the Atal Tunnel to Sissu.','Easy-Moderate','6 Days',     '4,000 m', 'Multi-stop','May–Oct',     'Fly to Delhi · Volvo to Manali', 18999, true, 280)
 on conflict (id) do update set
   name = excluded.name,
   region = excluded.region,
@@ -715,7 +720,7 @@ insert into public.trek_guidelines (id, intro_note, dos, donts) values (
 -- ============================================================
 do $$
 declare
-  feat text[] := array['kudremukh','netravati','bandaje','kumara-parvatha','kurinjal'];
+  feat text[] := array['kudremukh','netravati','bandaje','kurinjal','gangadikal','kodachadri'];
   trek text;
   fri date := (current_date + ((5 - extract(dow from current_date)::int + 7) % 7))::date;
   i int := 0;

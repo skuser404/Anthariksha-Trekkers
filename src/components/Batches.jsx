@@ -3,20 +3,19 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { supabase, supabaseEnabled } from '../lib/supabase.js';
 import { TREK_PRICES, formatINR } from '../lib/treks.js';
+import { openBooking } from './BookingModal.jsx';
 
-const FEATURED_IDS = ['kudremukh', 'netravati', 'bandaje', 'kumara-parvatha', 'kurinjal'];
+const FEATURED_IDS = ['kudremukh', 'netravati', 'bandaje', 'kurinjal', 'gangadikal', 'kodachadri'];
 
 // Names + IDs in display order — used as fallback when Supabase isn't configured.
 const FALLBACK = [
-  { trek_id: 'kudremukh',       name: 'Kudremukh',       price: TREK_PRICES.kudremukh,         is_open: true },
-  { trek_id: 'netravati',       name: 'Netravati',       price: TREK_PRICES.netravati,         is_open: true },
-  { trek_id: 'bandaje',         name: 'Bandaje',         price: TREK_PRICES.bandaje,           is_open: true },
-  { trek_id: 'kumara-parvatha', name: 'Kumara Parvatha', price: TREK_PRICES['kumara-parvatha'],is_open: true },
-  { trek_id: 'kurinjal',        name: 'Kurinjal',        price: TREK_PRICES.kurinjal,          is_open: true }
+  { trek_id: 'kudremukh',  name: 'Kudremukh',  price: TREK_PRICES.kudremukh,  is_open: true },
+  { trek_id: 'netravati',  name: 'Netravati',  price: TREK_PRICES.netravati,  is_open: true },
+  { trek_id: 'bandaje',    name: 'Bandaje',    price: TREK_PRICES.bandaje,    is_open: true },
+  { trek_id: 'kurinjal',   name: 'Kurinjal',   price: TREK_PRICES.kurinjal,   is_open: true },
+  { trek_id: 'gangadikal', name: 'Gangadikal', price: TREK_PRICES.gangadikal, is_open: true },
+  { trek_id: 'kodachadri', name: 'Kodachadri', price: TREK_PRICES.kodachadri, is_open: true }
 ];
-
-const wa = (trek) =>
-  `https://wa.me/919902704361?text=${encodeURIComponent(`Hey Anthariksha, I want to book the ${trek} trek.`)}`;
 
 export default function Batches() {
   const [rows, setRows] = useState(FALLBACK);
@@ -112,15 +111,14 @@ export default function Batches() {
                   <span className="font-medium text-cream">{formatINR(b.price)}</span>
                 </div>
                 {b.is_open ? (
-                  <a
-                    href={wa(b.name)}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`Book ${b.name} on WhatsApp`}
+                  <button
+                    type="button"
+                    onClick={() => openBooking({ id: b.trek_id, name: `${b.name} Trek`, price: b.price })}
+                    aria-label={`Book ${b.name}`}
                     className="inline-flex items-center gap-2 rounded-full bg-ember text-cream px-4 py-2 text-xs font-medium hover:bg-cream hover:text-ink transition-colors"
                   >
                     Book →
-                  </a>
+                  </button>
                 ) : (
                   <span
                     aria-disabled="true"

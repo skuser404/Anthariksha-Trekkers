@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Component, useEffect, useState } from 'react';
 import { supabase, supabaseEnabled } from '../lib/supabase.js';
 import AdminLogin from './Login.jsx';
 import AdminDashboard from './Dashboard.jsx';
@@ -200,7 +200,44 @@ export default function AdminRouter() {
   }
 
   // 5. Fully verified — show dashboard
-  return <AdminDashboard user={session.user} />;
+  return (
+    <AdminErrorBoundary>
+      <AdminDashboard user={session.user} />
+    </AdminErrorBoundary>
+  );
+}
+
+// Catches render crashes inside the dashboard and shows the actual error
+// with a reload button, instead of a blank screen.
+class AdminErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  componentDidCatch(error, info) {
+    console.error('[admin] crashed:', error, info?.componentStack);
+  }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <div className="min-h-screen grid place-items-center bg-base text-cream px-6">
+        <div className="max-w-xl text-center">
+          <div className="eyebrow text-ember">Control Panel</div>
+          <h1 className="serif text-4xl mt-3 mb-4">Something broke</h1>
+          <p className="text-cream/70 text-sm leading-relaxed break-words">
+            {String(this.state.error?.message || this.state.error)}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-8 px-5 py-2.5 rounded-full bg-cream text-ink text-sm font-medium"
+          >Reload panel</button>
+        </div>
+      </div>
+    );
+  }
 }
 
 function FullScreen({ children }) {

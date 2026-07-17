@@ -18,6 +18,7 @@ import Batches from './components/Batches.jsx';
 import CTABanner from './components/CTABanner.jsx';
 import Footer from './components/Footer.jsx';
 import WhatsAppFloat from './components/WhatsAppFloat.jsx';
+import BookingModal from './components/BookingModal.jsx';
 import AdminRouter from './admin/AdminRouter.jsx';
 
 const ADMIN_PATHS = ['/antariksha-control-panel', '/control-room'];
@@ -37,6 +38,13 @@ function useIsAdminRoute() {
 
 export default function App() {
   const isAdmin = useIsAdminRoute();
+
+  // The custom cursor only exists on the public site — keep the native
+  // cursor visible everywhere else (admin panel had an invisible cursor).
+  useEffect(() => {
+    document.body.classList.toggle('use-custom-cursor', !isAdmin);
+    return () => document.body.classList.remove('use-custom-cursor');
+  }, [isAdmin]);
 
   useEffect(() => {
     if (isAdmin) return;
@@ -84,6 +92,7 @@ export default function App() {
       </main>
       <Footer />
       <WhatsAppFloat />
+      <BookingModal />
     </div>
   );
 }
