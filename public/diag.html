@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>Anthariksha — Connection Check</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0E120F; color: #F4EFE6; margin: 0; padding: 24px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.sub { color: #F4EFE699; font-size: 13px; margin: 0 0 20px; }
+  .row { display: flex; gap: 12px; align-items: flex-start; background: #ffffff0a; border: 1px solid #ffffff1a;
+         border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+  .icon { font-size: 18px; width: 24px; text-align: center; }
+  .name { font-weight: 600; font-size: 14px; }
+  .detail { font-size: 12px; color: #F4EFE699; word-break: break-all; margin-top: 3px; }
+  .ok .icon::before { content: "✅"; }
+  .bad .icon::before { content: "❌"; }
+  .wait .icon::before { content: "⏳"; }
+  button { margin-top: 14px; background: #D2772E; color: #F4EFE6; border: 0; border-radius: 999px;
+           padding: 10px 20px; font-size: 14px; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>Connection Check</h1>
+<p class="sub">This page tests whether YOUR browser can reach the Anthariksha backend. Screenshot the results.</p>
+<div id="rows"></div>
+<button id="copy">Copy report</button>
+<script>
+(function () {
+  var URL_ = 'https://nyeuhreixmpajemmhhwb.supabase.co';
+  var KEY = 'sb_publishable_jn4tHdlJcJy50l3sjkA48A_YFugBWH2';
+  var rows = document.getElementById('rows');
+  var report = [];
+
+  function row(name) {
+    var div = document.createElement('div');
+    div.className = 'row wait';
+    div.innerHTML = '<div class="icon"></div><div><div class="name">' + name +
+      '</div><div class="detail">running…</div></div>';
+    rows.appendChild(div);
+    return {
+      done: function (ok, detail) {
+        div.className = 'row ' + (ok ? 'ok' : 'bad');
+        div.querySelector('.detail').textContent = detail;
+        report.push((ok ? 'OK  ' : 'FAIL') + ' | ' + name + ' | ' + detail);
+      }
+    };
+  }
+
+  function timed(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timed out after ' + ms / 1000 + 's')); }, ms); })
+    ]);
+  }
+
+  // 1. JavaScript runs
+  row('1. JavaScript is running').done(true, 'page scripts execute in this browser');
+
+  // 2. Auth service reachable
+  var r2 = row('2. Login service reachable');
+  timed(fetch(URL_ + '/auth/v1/health', { headers: { apikey: KEY } }), 8000)
+    .then(function (res) { r2.done(res.ok, 'HTTP ' + res.status); })
+    .catch(function (e) { r2.done(false, String(e.message || e)); });
+
+  // 3. Database API reachable
+  var r3 = row('3. Database reachable (treks)');
+  timed(fetch(URL_ + '/rest/v1/treks?select=id&limit=1', { headers: { apikey: KEY } }), 8000)
+    .then(function (res) { return res.text().then(function (t) { r3.done(res.ok, 'HTTP ' + res.status + ' — ' + t.slice(0, 80)); }); })
+    .catch(function (e) { r3.done(false, String(e.message || e)); });
+
+  // 4. Stored login session
+  var r4 = row('4. Saved login session');
+  var token = null, sub = null;
+  try {
+    var raw = JSON.parse(localStorage.getItem('anth-auth') || 'null');
+    token = raw && (raw.access_token || (raw.currentSession && raw.currentSession.access_token));
+    if (token) {
+      try {
+        var payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        sub = payload.sub;
+        var expIn = Math.round((payload.exp * 1000 - Date.now()) / 60000);
+        r4.done(true, 'user ' + (payload.email || sub) + ' — token ' + (expIn > 0 ? 'valid ' + expIn + ' more min' : 'EXPIRED ' + (-expIn) + ' min ago'));
+      } catch (e) { r4.done(false, 'token unreadable: ' + e.message); }
+    } else {
+      r4.done(false, 'no saved session — sign in at /control-room first, then re-open this page');
+    }
+  } catch (e) { r4.done(false, String(e.message || e)); }
+
+  // 5. Admin role check (needs session)
+  var r5 = row('5. Admin role check');
+  if (token && sub) {
+    timed(fetch(URL_ + '/rest/v1/profiles?select=role&id=eq.' + sub, {
+      headers: { apikey: KEY, Authorization: 'Bearer ' + token }
+    }), 8000)
+      .then(function (res) { return res.text().then(function (t) { r5.done(res.ok && t.indexOf('admin') !== -1, 'HTTP ' + res.status + ' — ' + t.slice(0, 100)); }); })
+      .catch(function (e) { r5.done(false, String(e.message || e)); });
+  } else {
+    r5.done(false, 'skipped — no session token (see check 4)');
+  }
+
+  // 6. Realtime websocket
+  var r6 = row('6. Live-updates connection (websocket)');
+  try {
+    var ws = new WebSocket(URL_.replace('https', 'wss') + '/realtime/v1/websocket?apikey=' + KEY + '&vsn=1.0.0');
+    var settled = false;
+    var t6 = setTimeout(function () { if (!settled) { settled = true; try { ws.close(); } catch (e) {} r6.done(false, 'timed out after 8s'); } }, 8000);
+    ws.onopen = function () { if (!settled) { settled = true; clearTimeout(t6); r6.done(true, 'connected'); ws.close(); } };
+    ws.onerror = function () { if (!settled) { settled = true; clearTimeout(t6); r6.done(false, 'websocket blocked or failed'); } };
+  } catch (e) { r6.done(false, String(e.message || e)); }
+
+  document.getElementById('copy').onclick = function () {
+    var text = report.join('\n');
+    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
+      .then(function () { alert('Report copied — paste it in chat.'); })
+      .catch(function () { prompt('Copy this:', text); });
+  };
+})();
+</script>
+</body>
+</html>
