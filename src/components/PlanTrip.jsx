@@ -137,7 +137,7 @@ export default function PlanTrip() {
                 <input value={form.category} onChange={set('category')} placeholder="Trekking, Family trip…" className={inputCls} />
               </L>
               <L label="Destination">
-                <input value={form.destination} onChange={set('destination')} placeholder="Kudremukh, Manali, Bali…" className={inputCls} />
+                <input list="india-destinations" value={form.destination} onChange={set('destination')} placeholder="Kudremukh, Manali, Bali…" className={inputCls} />
               </L>
               <L label="People">
                 <input type="number" min={1} value={form.people} onChange={set('people')} placeholder="4" className={inputCls} />

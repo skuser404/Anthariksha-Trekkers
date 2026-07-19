@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
 import { supabase, supabaseEnabled } from '../lib/supabase.js';
+import { INDIA_DESTINATIONS, INTL_DESTINATIONS } from '../lib/destinations.js';
+
+// Which suggestion list each text field uses
+const LIST_FOR = { destination: 'india-destinations', country: 'intl-destinations', city: 'intl-destinations' };
 
 // Static fallback — mirrors the trip_categories seed. Admin edits in DB win.
 const FALLBACK_CATS = [
@@ -149,41 +153,53 @@ export default function SearchWidget() {
   }
 
   const inputCls =
-    'w-full bg-cream/[0.05] border border-cream/15 rounded-xl px-3 py-2.5 text-sm text-cream placeholder:text-cream/30 outline-none focus:border-ember transition-colors [color-scheme:dark]';
+    'w-full h-12 bg-cream/[0.05] border border-cream/15 rounded-xl px-3.5 text-sm text-cream placeholder:text-cream/30 outline-none focus:border-ember focus:bg-cream/[0.08] transition-colors [color-scheme:dark]';
 
   return (
     <section id="search" className="relative z-20 bg-base">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-10 -mt-14 sm:-mt-16">
+      {/* Shared suggestion lists (MakeMyTrip-style destination dropdowns) */}
+      <datalist id="india-destinations">
+        {INDIA_DESTINATIONS.map((d) => <option key={d} value={d} />)}
+      </datalist>
+      <datalist id="intl-destinations">
+        {INTL_DESTINATIONS.map((d) => <option key={d} value={d} />)}
+      </datalist>
+
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-10 -mt-14 sm:-mt-20 pb-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, ease: [0.7, 0, 0.2, 1] }}
-          className="rounded-2xl sm:rounded-3xl border border-cream/12 bg-ink/85 backdrop-blur-xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)] overflow-hidden"
+          className="rounded-2xl sm:rounded-3xl border border-cream/12 bg-ink/90 backdrop-blur-2xl shadow-[0_40px_90px_-25px_rgba(0,0,0,0.75)] overflow-hidden"
         >
-          <div className="flex gap-1 overflow-x-auto px-3 pt-3 pb-1 scrollbar-none" role="tablist" aria-label="Trip categories">
-            {cats.map((c) => (
-              <button
-                key={c.cat_key}
-                role="tab"
-                aria-selected={active === c.cat_key}
-                onClick={() => pick(c.cat_key)}
-                className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-colors ${
-                  active === c.cat_key
-                    ? 'bg-ember text-cream'
-                    : 'text-cream/65 hover:text-cream hover:bg-cream/5'
-                }`}
-              >
-                <span aria-hidden>{c.emoji}</span> {c.label}
-              </button>
-            ))}
+          {/* Category tabs — hidden scrollbar + right fade hint */}
+          <div className="relative border-b border-cream/10">
+            <div className="flex gap-1 overflow-x-auto scrollbar-none px-3 py-3 pr-14" role="tablist" aria-label="Trip categories">
+              {cats.map((c) => (
+                <button
+                  key={c.cat_key}
+                  role="tab"
+                  aria-selected={active === c.cat_key}
+                  onClick={() => pick(c.cat_key)}
+                  className={`shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-[13px] font-medium whitespace-nowrap transition-all ${
+                    active === c.cat_key
+                      ? 'bg-ember text-cream shadow-lg shadow-ember/25'
+                      : 'text-cream/60 hover:text-cream hover:bg-cream/[0.06] border border-transparent hover:border-cream/10'
+                  }`}
+                >
+                  <span aria-hidden>{c.emoji}</span> {c.label}
+                </button>
+              ))}
+            </div>
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-ink/95 to-transparent" aria-hidden />
           </div>
 
-          <form onSubmit={submit} className="p-4 sm:p-6">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <form onSubmit={submit} className="p-5 sm:p-7">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {fields.map((f) => (
                 <label key={f.k} className="block">
-                  <span className="block text-[10px] uppercase tracking-[0.18em] text-cream/50 mb-1.5">{f.label}</span>
+                  <span className="block text-[10px] uppercase tracking-[0.18em] text-cream/50 mb-2">{f.label}</span>
                   {f.type === 'select' ? (
                     <select
                       value={values[f.k] || ''}
@@ -197,6 +213,7 @@ export default function SearchWidget() {
                     <input
                       type={f.type}
                       min={f.type === 'number' ? 1 : undefined}
+                      list={f.type === 'text' ? LIST_FOR[f.k] : undefined}
                       value={values[f.k] || ''}
                       onChange={(e) => setValues({ ...values, [f.k]: e.target.value })}
                       placeholder={f.ph}
@@ -208,7 +225,7 @@ export default function SearchWidget() {
               <div className="flex items-end col-span-2 sm:col-span-1">
                 <button
                   type="submit"
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-ember text-cream px-5 py-2.5 text-sm font-semibold hover:bg-cream hover:text-ink transition-colors"
+                  className="w-full h-12 inline-flex items-center justify-center gap-2 rounded-xl bg-ember text-cream px-5 text-sm font-semibold hover:bg-cream hover:text-ink transition-colors shadow-lg shadow-ember/25"
                 >
                   <Search size={15} strokeWidth={2.4} />
                   {CTA[active] || CTA._default}

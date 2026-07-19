@@ -38,6 +38,10 @@ body.use-custom-cursor [role="button"] {
   .cursor-dot, .cursor-ring { display: none !important; }
 }
 
+/* Hide scrollbars on horizontally scrolling tab rows */
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
 ::selection {
   background: #D2772E;
   color: #0E120F;
