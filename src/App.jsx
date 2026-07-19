@@ -5,6 +5,10 @@ import Cursor from './components/Cursor.jsx';
 import AnnouncementBanner from './components/AnnouncementBanner.jsx';
 import Navbar from './components/Navbar.jsx';
 import Hero from './components/Hero.jsx';
+import SearchWidget from './components/SearchWidget.jsx';
+import StatsCounters from './components/StatsCounters.jsx';
+import PlanTrip from './components/PlanTrip.jsx';
+import ContactSection from './components/ContactSection.jsx';
 import Marquee from './components/Marquee.jsx';
 import Intro from './components/Intro.jsx';
 import FeaturedTreks from './components/FeaturedTreks.jsx';
@@ -78,7 +82,9 @@ export default function App() {
       <Navbar />
       <main>
         <Hero />
+        <SearchWidget />
         <Marquee />
+        <StatsCounters />
         <Intro />
         <VideoStory />
         <FeaturedTreks />
@@ -88,7 +94,9 @@ export default function App() {
         <ExploreAround />
         <Testimonials />
         <Batches />
+        <PlanTrip />
         <CTABanner />
+        <ContactSection />
       </main>
       <Footer />
       <WhatsAppFloat />

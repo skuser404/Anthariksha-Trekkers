@@ -969,9 +969,16 @@ function TrekCard({ trek, index, onOpen }) {
       <div className="image-hover relative aspect-[5/4] overflow-hidden">
         <DriveImage src={trek.image} alt={trek.name} className="absolute inset-0 w-full h-full object-cover" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
-        <div className="absolute top-4 left-4 flex gap-2">
-          <Pill>{trek.duration}</Pill>
-          <Pill>{trek.difficulty}</Pill>
+        <div className="absolute top-4 left-4 flex flex-col items-start gap-2">
+          {trek.badge && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-ember text-cream px-3 py-1 text-[11px] font-semibold uppercase tracking-wider shadow-lg shadow-ember/30 -rotate-1">
+              ★ {trek.badge}
+            </span>
+          )}
+          <div className="flex gap-2">
+            <Pill>{trek.duration}</Pill>
+            <Pill>{trek.difficulty}</Pill>
+          </div>
         </div>
         <div className="absolute top-4 right-4">
           <Pill tone="ember">{trek.bestSeason}</Pill>

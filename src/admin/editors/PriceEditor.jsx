@@ -11,6 +11,13 @@ const DIFFICULTY_OPTIONS = [
   { value: 'Extreme', label: 'Extreme' }
 ];
 
+const BADGE_OPTIONS = [
+  { value: '', label: '— No ribbon —' },
+  ...['Trending', 'Most Popular', 'Best Seller', 'Limited Seats', 'Family Favourite',
+     'Weekend Special', 'New Arrival', 'Early Bird', 'Offer', 'Last Seats']
+    .map((b) => ({ value: b, label: b }))
+];
+
 export default function PriceEditor() {
   const { rows, loading } = useTable('treks', { order: 'display_order' });
   const [editingId, setEditingId] = useState(null);
@@ -23,6 +30,7 @@ export default function PriceEditor() {
       price: t.price ?? '',
       offer_price: t.offer_price ?? '',
       difficulty: t.difficulty ?? '',
+      badge: t.badge ?? '',
       is_active: t.is_active,
       is_open: t.is_open !== false
     });
@@ -45,6 +53,7 @@ export default function PriceEditor() {
           price: draft.price === '' ? null : Number(draft.price),
           offer_price: draft.offer_price === '' ? null : Number(draft.offer_price),
           difficulty: draft.difficulty || null,
+          badge: draft.badge || null,
           is_active: !!draft.is_active,
           is_open: !!draft.is_open
         })
@@ -100,6 +109,13 @@ export default function PriceEditor() {
                   <td className="px-4 py-3">
                     <div className="font-medium text-cream">{t.name}</div>
                     <div className="text-xs text-cream/45">{t.id}</div>
+                    {isEditing ? (
+                      <div className="mt-2 max-w-[180px]">
+                        <Select value={draft.badge} onChange={(v) => setDraft({ ...draft, badge: v })} options={BADGE_OPTIONS} />
+                      </div>
+                    ) : t.badge ? (
+                      <span className="mt-1.5 inline-block text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-ember/20 text-ember border border-ember/40">★ {t.badge}</span>
+                    ) : null}
                   </td>
                   <td className="px-4 py-3 text-cream/75">
                     {isEditing ? (

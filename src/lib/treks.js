@@ -55,9 +55,9 @@ export function useLiveTreks(defaults) {
     let cancelled = false;
 
     async function fetchAll() {
-      const { data, error } = await supabase
-        .from('treks')
-        .select('id, name, price, offer_price, difficulty, altitude, duration, distance, best_season, from_bangalore, tag, image, gallery, highlights, itinerary, is_active, is_open');
+      // '*' keeps this query working across schema versions (new columns
+      // like badge/rating may not exist until the upgrade SQL is run).
+      const { data, error } = await supabase.from('treks').select('*');
       if (cancelled || error || !data) return;
 
       const map = {};
@@ -74,6 +74,8 @@ export function useLiveTreks(defaults) {
           bestSeason: row.best_season,
           fromBangalore: row.from_bangalore,
           tag: row.tag,
+          badge: row.badge,
+          rating: row.rating,
           image: row.image,
           gallery: Array.isArray(row.gallery) ? row.gallery.filter(Boolean) : null,
           highlights: Array.isArray(row.highlights) && row.highlights.length ? row.highlights : null,

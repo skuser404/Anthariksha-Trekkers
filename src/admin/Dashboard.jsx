@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar, Image as ImageIcon, Share2, Tag, Megaphone, FileText,
-  Camera, ChevronLeft, LogOut, ClipboardList, Activity, ShieldAlert
+  Camera, ChevronLeft, LogOut, ClipboardList, Activity, ShieldAlert,
+  Layers, Sparkles, Mail
 } from 'lucide-react';
 import { supabase } from '../lib/supabase.js';
 import { ToastHost } from './editors/_shared.jsx';
@@ -16,6 +17,9 @@ import AnnouncementManager from './editors/AnnouncementManager.jsx';
 import TermsEditor from './editors/TermsEditor.jsx';
 import TrekGuidelinesEditor from './editors/TrekGuidelinesEditor.jsx';
 import BookingsView from './editors/BookingsView.jsx';
+import CategoryManager from './editors/CategoryManager.jsx';
+import PlanningRequestsView from './editors/PlanningRequestsView.jsx';
+import MessagesView from './editors/MessagesView.jsx';
 
 const CARDS = [
   { id: 'itinerary',     icon: Calendar,      title: 'Itinerary Editor',        desc: 'Edit day-by-day plans + highlights per trek.',          accent: 'from-ember/30 to-ember/5' },
@@ -26,7 +30,10 @@ const CARDS = [
   { id: 'terms',         icon: FileText,      title: 'Terms & Conditions',      desc: 'Policies · Privacy · Cancellation · Safety.',           accent: 'from-indigo-400/30 to-indigo-400/5' },
   { id: 'gallery',       icon: Camera,        title: 'Gallery Manager',         desc: 'Reorder, add, or hide gallery photos (Drive links).',   accent: 'from-fuchsia-400/30 to-fuchsia-400/5' },
   { id: 'guidelines',    icon: ShieldAlert,   title: 'Trek Guidelines',         desc: "Global Do's, Don'ts, and the mandatory lunchbox rule.", accent: 'from-emerald-400/30 to-emerald-400/5' },
-  { id: 'bookings',      icon: ClipboardList, title: 'Recent Bookings',         desc: 'Latest 50 enquiries from WhatsApp & form submits.',     accent: 'from-violet-400/30 to-violet-400/5' }
+  { id: 'bookings',      icon: ClipboardList, title: 'Recent Bookings',         desc: 'Latest 50 enquiries from WhatsApp & form submits.',     accent: 'from-violet-400/30 to-violet-400/5' },
+  { id: 'planning',      icon: Sparkles,      title: 'Planning Requests',       desc: 'Custom trip requests from the search & planner forms.', accent: 'from-ember/30 to-ember/5' },
+  { id: 'categories',    icon: Layers,        title: 'Search Categories',       desc: 'Tabs in the homepage search widget — add or disable.',  accent: 'from-teal-400/30 to-teal-400/5' },
+  { id: 'messages',      icon: Mail,          title: 'Contact Messages',        desc: 'Messages from the website contact form.',               accent: 'from-cyan-400/30 to-cyan-400/5' }
 ];
 
 const VIEWS = {
@@ -38,7 +45,10 @@ const VIEWS = {
   terms:         TermsEditor,
   gallery:       GalleryManager,
   guidelines:    TrekGuidelinesEditor,
-  bookings:      BookingsView
+  bookings:      BookingsView,
+  planning:      PlanningRequestsView,
+  categories:    CategoryManager,
+  messages:      MessagesView
 };
 
 export default function AdminDashboard({ user }) {
